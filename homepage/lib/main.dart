@@ -124,11 +124,10 @@ class Header extends StatelessWidget {
         boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
       ),
       child: Column(
-        // Changed Row to Column to stack the logo and text
-        mainAxisAlignment: MainAxisAlignment.center, // Center vertically
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.center, // Center horizontally
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
                 'assets/plsp.png',
@@ -136,8 +135,7 @@ class Header extends StatelessWidget {
               ),
               SizedBox(width: 10),
               Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start, // Align text to start
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Pamantasan ng Lungsod ng San Pablo',
@@ -227,29 +225,26 @@ class MenuButton extends StatelessWidget {
   final Color textColor; // Color for the button text
 
   MenuButton(this.text,
-      {this.buttonColor =
-          const Color.fromARGB(255, 73, 155, 76), // Default button color
-      this.textColor = Colors.white}); // Default text color
+      {this.buttonColor = const Color.fromARGB(255, 73, 155, 76),
+      this.textColor = Colors.white});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Container(
-        width: double.infinity, // Make the button fill the available width
+        width: double.infinity,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: buttonColor, // Set the button background color
+            backgroundColor: buttonColor,
             padding: EdgeInsets.symmetric(vertical: 10),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
           ),
-          onPressed: () {
-            // Define your button action here
-          },
+          onPressed: () {},
           child: Text(
             text,
-            style: TextStyle(color: textColor), // Set the text color
+            style: TextStyle(color: textColor),
           ),
         ),
       ),
@@ -276,7 +271,7 @@ class NotesSection extends StatelessWidget {
       children: [
         Text('Notes', style: TextStyle(fontSize: 22)),
         Container(
-          height: 200, // Set a fixed height for the notes section
+          height: 200,
           child: ListView.builder(
             itemCount: notes.length,
             itemBuilder: (context, index) {
@@ -331,14 +326,13 @@ class ClassContainer extends StatelessWidget {
             'Classes',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 10), // Reduced spacing between title and grid
+          SizedBox(height: 10),
           Expanded(
             child: GridView.count(
-              crossAxisCount: 3, // Adjust this value for the number of columns
+              crossAxisCount: 3,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio:
-                  1.5, // Adjusts the aspect ratio for height vs width
+              childAspectRatio: 1.5,
               children: [
                 ClassCard(
                   title: 'College of Computer Studies and Technology',
@@ -393,7 +387,7 @@ class _ClassCardState extends State<ClassCard> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: Container(
-        height: 100, // Set a fixed height for a shorter, rectangular shape
+        height: 100,
         decoration: BoxDecoration(
           color: _isHovered ? Colors.green[50] : Colors.white,
           borderRadius: BorderRadius.circular(10),
@@ -414,12 +408,11 @@ class _ClassCardState extends State<ClassCard> {
             ),
             SizedBox(height: 5),
             Expanded(
-              // Use Expanded to allow for flexible height
               child: Text(
                 widget.description,
                 style: TextStyle(fontSize: 12),
-                overflow: TextOverflow.ellipsis, // Prevent overflow
-                maxLines: 2, // Limit the number of lines
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               ),
             ),
             Align(
@@ -459,15 +452,13 @@ class _AddClassCardState extends State<AddClassCard> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: _isHovered
-              ? Colors.green.shade100
-              : Colors.white, // Change background color on hover
+          color: _isHovered ? Colors.green.shade100 : Colors.white,
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
               blurRadius: 10,
               color: Colors.black12,
-              offset: Offset(0, _isHovered ? 4 : 2), // Adjust shadow on hover
+              offset: Offset(0, _isHovered ? 4 : 2),
             ),
           ],
         ),

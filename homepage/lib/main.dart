@@ -1,425 +1,224 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Dashboard',
-      theme: ThemeData(
-        fontFamily: 'Poppins',
-        primarySwatch: Colors.green,
-      ),
-      home: DashboardScreen(),
-    );
-  }
-}
-
 class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  List<Map<String, dynamic>> notes = [];
-
-  void _addNote() {
-    TextEditingController noteController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Enter your note"),
-          content: TextField(
-            controller: noteController,
-            decoration: InputDecoration(hintText: "Note text"),
-          ),
-          actions: [
-            TextButton(
-              child: Text("Cancel"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              child: Text("Add Note"),
-              onPressed: () {
-                setState(() {
-                  notes.add({'text': noteController.text, 'completed': false});
-                });
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _toggleDone(int index) {
-    setState(() {
-      notes[index]['completed'] = !notes[index]['completed'];
-    });
-  }
-
-  void _removeNote(int index) {
-    setState(() {
-      notes.removeAt(index);
-    });
-  }
+  bool isSidebarExpanded = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Header Section
-            Header(),
-
-            SizedBox(height: 20),
-
-            // Main Content Section
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Sidebar Section
-                  Sidebar(
-                    onAddNote: _addNote,
-                    notes: notes,
-                    toggleDone: _toggleDone,
-                    removeNote: _removeNote,
-                  ),
-
-                  SizedBox(width: 20),
-
-                  // Class Container Section
-                  Expanded(
-                    child: ClassContainer(),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class Header extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      body: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/plsp.png',
-                width: 90,
-              ),
-              SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Pamantasan ng Lungsod ng San Pablo',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Text('Brgy. San Jose, San Pablo City',
-                      style: TextStyle(fontSize: 12)),
-                  Text('Tel No: (049) 536-7830',
-                      style: TextStyle(fontSize: 12)),
-                  Text('Email Address: plspofficial@plsp.edu.ph',
-                      style: TextStyle(fontSize: 12)),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class Sidebar extends StatelessWidget {
-  final Function onAddNote;
-  final List<Map<String, dynamic>> notes;
-  final Function(int) toggleDone;
-  final Function(int) removeNote;
-
-  Sidebar(
-      {required this.onAddNote,
-      required this.notes,
-      required this.toggleDone,
-      required this.removeNote});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 250,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
-      ),
-      padding: EdgeInsets.all(20),
-      child: Column(
-        children: [
-          // Profile Section
-          Column(
-            children: [
-              CircleAvatar(
-                backgroundImage: AssetImage('assets/profile.png'),
-                radius: 35,
-              ),
-              SizedBox(height: 10),
-              Text('Happy Monday, Ms. Alice!',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          SizedBox(height: 20),
-
-          // Menu Section
-          Column(
-            children: [
-              MenuButton('Add Students'),
-              MenuButton('Rating Sheets'),
-              MenuButton('Upload Grades'),
-              MenuButton('Logout'),
-            ],
-          ),
-          SizedBox(height: 20),
-
-          // Notes Section
-          NotesSection(
-            onAddNote: onAddNote,
-            notes: notes,
-            toggleDone: toggleDone,
-            removeNote: removeNote,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class MenuButton extends StatelessWidget {
-  final String text;
-  final Color buttonColor; // Color for the button background
-  final Color textColor; // Color for the button text
-
-  MenuButton(this.text,
-      {this.buttonColor = const Color.fromARGB(255, 73, 155, 76),
-      this.textColor = Colors.white});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Container(
-        width: double.infinity,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: buttonColor,
-            padding: EdgeInsets.symmetric(vertical: 10),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          ),
-          onPressed: () {},
-          child: Text(
-            text,
-            style: TextStyle(color: textColor),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class NotesSection extends StatelessWidget {
-  final Function onAddNote;
-  final List<Map<String, dynamic>> notes;
-  final Function(int) toggleDone;
-  final Function(int) removeNote;
-
-  NotesSection({
-    required this.onAddNote,
-    required this.notes,
-    required this.toggleDone,
-    required this.removeNote,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text('Notes', style: TextStyle(fontSize: 22)),
-        Container(
-          height: 200,
-          child: ListView.builder(
-            itemCount: notes.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(
-                  notes[index]['text'],
-                  style: TextStyle(
-                    decoration: notes[index]['completed']
-                        ? TextDecoration.lineThrough
-                        : TextDecoration.none,
-                  ),
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.check),
-                      onPressed: () => toggleDone(index),
-                      color: notes[index]['completed']
-                          ? Colors.green
-                          : Colors.grey,
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close),
-                      onPressed: () => removeNote(index),
-                      color: Colors.red,
-                    ),
-                  ],
-                ),
-              );
+          // Sidebar
+          MouseRegion(
+            onEnter: (_) {
+              setState(() {
+                isSidebarExpanded = true;
+              });
             },
+            onExit: (_) {
+              setState(() {
+                isSidebarExpanded = false;
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: isSidebarExpanded ? 200 : 70,
+              color: Colors.green[100],
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      // Profile Picture
+                      CircleAvatar(
+                        radius: isSidebarExpanded ? 30 : 20,
+                        backgroundImage: AssetImage('assets/aliceg.jpg'),
+                      ),
+                      if (isSidebarExpanded) const SizedBox(height: 10),
+                      if (isSidebarExpanded)
+                        const Text(
+                          "Edit Profile",
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      const SizedBox(height: 20),
+                      const Icon(Icons.upload, size: 40),
+                      if (isSidebarExpanded) const Text("Upload Grades"),
+                      const SizedBox(height: 20),
+                      const Icon(Icons.archive, size: 40),
+                      if (isSidebarExpanded) const Text("Archive Courses"),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.logout, size: 40),
+                        if (isSidebarExpanded) const Text("Log Out"),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-        ElevatedButton(
-          onPressed: () => onAddNote(),
-          child: Text("Add Note"),
-        ),
-      ],
-    );
-  }
-}
 
-class ClassContainer extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Classes',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 10),
+          // Main Content
           Expanded(
-            child: GridView.count(
-              crossAxisCount: 3,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 1.5,
-              children: [
-                ClassCard(
-                  title: 'College of Computer Studies and Technology',
-                  description:
-                      'CC214 - Data Structure and Algorithm\nBSIT - 2C\nRoom 203',
-                ),
-                ClassCard(
-                  title: 'College of Computer Studies and Technology',
-                  description:
-                      'CC214 - Data Structure and Algorithm\nBSIT - 2A\nRoom 211',
-                ),
-                ClassCard(
-                  title: 'College of Computer Studies and Technology',
-                  description:
-                      'CC111 - Introduction to Computing\nBSIT - 1D\nRoom 207',
-                ),
-                ClassCard(
-                  title: 'College of Computer Studies and Technology',
-                  description:
-                      'ITProfE13 - Project Management\nBSIT - 3D\nRoom 203',
-                ),
-                ClassCard(
-                  title: 'College of Computer Studies and Technology',
-                  description: 'LITE - Living in IT Era\nBSIT - 1A\nRoom 210',
-                ),
-                AddClassCard(),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Center(
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 26,
+                          backgroundImage: AssetImage('assets/plsp.png'),
+                        ),
+                        SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Pamantasan ng Lungsod ng San Pablo",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              'Brgy. San Jose, San Pablo City',
+                              style: TextStyle(fontSize: 10),
+                            ),
+                            Text(
+                              'Tel No: (049) 536-7830',
+                              style: TextStyle(fontSize: 10),
+                            ),
+                            Text(
+                              'Email Address: plspofficial@plsp.edu.ph',
+                              style: TextStyle(fontSize: 10),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Class Cards
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3, // Adjusted the number of columns
+                        childAspectRatio: 1.5, // Adjusted the aspect ratio
+                        crossAxisSpacing: 20,
+                        mainAxisSpacing: 20,
+                      ),
+                      itemCount: 4,
+                      itemBuilder: (context, index) {
+                        final classData = [
+                          {
+                            "name": "Data Structure and Algorithm",
+                            "section": "BSIT - 2C",
+                            "room": "203"
+                          },
+                          {
+                            "name": "Project Management",
+                            "section": "BSIT - 3D",
+                            "room": "203"
+                          },
+                          {
+                            "name": "Living in IT Era",
+                            "section": "BSIT - 1A",
+                            "room": "210"
+                          },
+                          {
+                            "name": "Introduction to Computing",
+                            "section": "BSIT - 1D",
+                            "room": "207"
+                          }
+                        ][index];
+
+                        return classCard(classData['name']!,
+                            classData['section']!, classData['room']!);
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
   }
-}
 
-class ClassCard extends StatefulWidget {
-  final String title;
-  final String description;
-
-  ClassCard({required this.title, required this.description});
-
-  @override
-  _ClassCardState createState() => _ClassCardState();
-}
-
-class _ClassCardState extends State<ClassCard> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: Container(
-        height: 100,
-        decoration: BoxDecoration(
-          color: _isHovered ? Colors.green[50] : Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 10,
-              color: _isHovered ? Colors.green[300]! : Colors.black12,
-            ),
-          ],
-        ),
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+  Widget classCard(String className, String section, String room) {
+    return Card(
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.title,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 5),
-            Expanded(
-              child: Text(
-                widget.description,
-                style: TextStyle(fontSize: 12),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
+            ListTile(
+              leading: CircleAvatar(
+                radius: 40,
+                backgroundImage: AssetImage('assets/ccst.jpg'),
               ),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: TextButton(
-                onPressed: () {},
-                child: Text('View Class'),
+              title: const Text(
+                "College of Computer Studies and Technology",
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12), // Smaller font size for the dept name
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(
+                      height:
+                          12), // Add some space between the dept name and the course details
+                  Text(
+                    className,
+                    style: const TextStyle(
+                        fontSize:
+                            10), // Smaller font size for the course details
+                  ),
+                  Text(
+                    "$section\nRoom $room",
+                    style: const TextStyle(
+                        fontSize:
+                            10), // Smaller font size for the course details
+                  ),
+                ],
+              ),
+              trailing: PopupMenuButton(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (value) {
+                  if (value == 'open') {
+                    print('Open Class');
+                  } else if (value == 'archive') {
+                    print('Archive Class');
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(value: 'open', child: Text("Open Class")),
+                  const PopupMenuItem(
+                      value: 'archive', child: Text("Archive Class")),
+                ],
               ),
             ),
           ],
@@ -429,50 +228,13 @@ class _ClassCardState extends State<ClassCard> {
   }
 }
 
-class AddClassCard extends StatefulWidget {
-  @override
-  _AddClassCardState createState() => _AddClassCardState();
-}
-
-class _AddClassCardState extends State<AddClassCard> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) {
-        setState(() {
-          _isHovered = true;
-        });
-      },
-      onExit: (_) {
-        setState(() {
-          _isHovered = false;
-        });
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: _isHovered ? Colors.green.shade100 : Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 10,
-              color: Colors.black12,
-              offset: Offset(0, _isHovered ? 4 : 2),
-            ),
-          ],
-        ),
-        padding: EdgeInsets.all(15),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.add, size: 50, color: Colors.green),
-              Text('Add Class', style: TextStyle(fontSize: 18)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+void main() {
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      iconTheme: const IconThemeData(color: Colors.black),
+      useMaterial3: true,
+    ),
+    home: const DashboardScreen(),
+  ));
 }

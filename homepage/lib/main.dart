@@ -40,7 +40,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       // Profile Picture
                       CircleAvatar(
                         radius: isSidebarExpanded ? 30 : 20,
-                        backgroundImage: AssetImage('assets/aliceg.jpg'),
+                        backgroundImage: const AssetImage('assets/aliceg.jpg'),
                       ),
                       if (isSidebarExpanded) const SizedBox(height: 10),
                       if (isSidebarExpanded)
@@ -78,8 +78,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
-                  Center(
-                    child: const Row(
+                  const Center(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -175,7 +175,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              leading: CircleAvatar(
+              leading: const CircleAvatar(
                 radius: 40,
                 backgroundImage: AssetImage('assets/ccst.jpg'),
               ),

@@ -14,5 +14,12 @@ dev_dependencies:
   flutter_lints: ^2.0.1
 
 flutter:
+  uses-material-design: true
   assets:
     - assets/plsp.png
+    - assets/ccst.jpg
+    - assets/aliceg.jpg
+  fonts:
+    - family: MaterialIcons
+      fonts:
+        - asset: fonts/MaterialIcons-Regular.ttf

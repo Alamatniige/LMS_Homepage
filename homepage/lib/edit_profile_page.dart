@@ -78,20 +78,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         const EdgeInsets.only(top: 20), // Added top padding
                     child: Column(
                       children: [
-                        Row(
+                        const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment
                               .center, // Aligning items centrally
                           children: [
                             CircleAvatar(
                               radius: 26,
-                              backgroundImage:
-                                  const AssetImage('assets/plsp.png'),
+                              backgroundImage: AssetImage('assets/plsp.png'),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
+                              children: [
                                 Text(
                                   "Pamantasan ng Lungsod ng San Pablo",
                                   style: TextStyle(

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:lms_homepage/edit_profile_page.dart';
-import 'upload_grade.dart'; // Import the UploadGradePage
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+class UploadGradePage extends StatefulWidget {
+  const UploadGradePage({super.key});
 
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  _UploadGradePageState createState() => _UploadGradePageState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _UploadGradePageState extends State<UploadGradePage> {
   bool isSidebarExpanded = false;
   bool isHovering = false; // For hover effect on Edit Profile
 
@@ -65,7 +63,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const EditProfilePage(),
+                                  builder: (context) =>
+                                      const Placeholder(), // Add your EditProfilePage here
                                 ),
                               );
                             },
@@ -91,27 +90,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       const SizedBox(height: 20),
-
-                      // Upload Grades Button
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const UploadGradePage(),
-                            ),
-                          );
-                        },
-                        child: Column(
-                          children: [
-                            const Icon(Icons.upload, size: 40),
-                            if (isSidebarExpanded) const Text("Upload Grades"),
-                          ],
-                        ),
-                      ),
+                      const Icon(Icons.upload, size: 40),
+                      if (isSidebarExpanded) const Text("Upload Grades"),
                       const SizedBox(height: 20),
-
-                      // Archive Courses Button
                       const Icon(Icons.archive, size: 40),
                       if (isSidebarExpanded) const Text("Archive Courses"),
                     ],
@@ -175,44 +156,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Class Cards
-                  Expanded(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 1.5,
-                        crossAxisSpacing: 20,
-                        mainAxisSpacing: 20,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.home),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
                       ),
-                      itemCount: 4,
-                      itemBuilder: (context, index) {
-                        final classData = [
-                          {
-                            "name": "Data Structure and Algorithm",
-                            "section": "BSIT - 2C",
-                            "room": "203"
-                          },
-                          {
-                            "name": "Project Management",
-                            "section": "BSIT - 3D",
-                            "room": "203"
-                          },
-                          {
-                            "name": "Living in IT Era",
-                            "section": "BSIT - 1A",
-                            "room": "210"
-                          },
-                          {
-                            "name": "Introduction to Computing",
-                            "section": "BSIT - 1D",
-                            "room": "207"
-                          }
-                        ][index];
+                    ],
+                  ),
 
-                        return classCard(classData['name']!,
-                            classData['section']!, classData['room']!);
-                      },
+                  // Title for Upload Grades
+                  const Text(
+                    "Upload Grades",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    "Select Course:",
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Class Cards for selecting courses to upload grades
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        classCard(
+                            "Data Structure and Algorithm", "BSIT - 2C", "203"),
+                        classCard("Project Management", "BSIT - 3D", "203"),
+                        classCard("Living in IT Era", "BSIT - 1A", "210"),
+                        classCard(
+                            "Introduction to Computing", "BSIT - 1D", "207"),
+                      ],
                     ),
                   ),
                 ],
@@ -257,21 +240,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-              trailing: PopupMenuButton(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) {
-                  if (value == 'open') {
-                    print('Open Class');
-                  } else if (value == 'archive') {
-                    print('Archive Class');
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'open', child: Text("Open Class")),
-                  const PopupMenuItem(
-                      value: 'archive', child: Text("Archive Class")),
-                ],
-              ),
             ),
           ],
         ),
@@ -287,6 +255,6 @@ void main() {
       iconTheme: const IconThemeData(color: Colors.black),
       useMaterial3: true,
     ),
-    home: const DashboardScreen(),
+    home: const UploadGradePage(),
   ));
 }

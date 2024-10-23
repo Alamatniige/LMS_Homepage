@@ -21,5 +21,3 @@ flutter:
     - assets/aliceg.jpg
   fonts:
     - family: MaterialIcons
-      fonts:
-        - asset: fonts/MaterialIcons-Regular.ttf

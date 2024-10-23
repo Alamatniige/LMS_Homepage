@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'edit_profile_page.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -9,6 +10,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   bool isSidebarExpanded = false;
+  bool isHovering = false; // For hover effect on Edit Profile
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +32,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               width: isSidebarExpanded ? 200 : 70,
-              color: Colors.green[100],
+              color: isSidebarExpanded
+                  ? const Color.fromARGB(255, 55, 165, 60)
+                  : Colors.green[100],
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -44,9 +48,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       if (isSidebarExpanded) const SizedBox(height: 10),
                       if (isSidebarExpanded)
-                        const Text(
-                          "Edit Profile",
-                          style: TextStyle(fontSize: 16),
+                        MouseRegion(
+                          onEnter: (_) {
+                            setState(() {
+                              isHovering = true;
+                            });
+                          },
+                          onExit: (_) {
+                            setState(() {
+                              isHovering = false;
+                            });
+                          },
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const EditProfilePage(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isHovering
+                                    ? Colors.green[700]
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                "Edit Profile",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       const SizedBox(height: 20),
                       const Icon(Icons.upload, size: 40),
@@ -120,8 +161,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3, // Adjusted the number of columns
-                        childAspectRatio: 1.5, // Adjusted the aspect ratio
+                        crossAxisCount: 3,
+                        childAspectRatio: 1.5,
                         crossAxisSpacing: 20,
                         mainAxisSpacing: 20,
                       ),
@@ -181,27 +222,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               title: const Text(
                 "College of Computer Studies and Technology",
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12), // Smaller font size for the dept name
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
               ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(
-                      height:
-                          12), // Add some space between the dept name and the course details
+                  const SizedBox(height: 12),
                   Text(
                     className,
-                    style: const TextStyle(
-                        fontSize:
-                            10), // Smaller font size for the course details
+                    style: const TextStyle(fontSize: 10),
                   ),
                   Text(
                     "$section\nRoom $room",
-                    style: const TextStyle(
-                        fontSize:
-                            10), // Smaller font size for the course details
+                    style: const TextStyle(fontSize: 10),
                   ),
                 ],
               ),

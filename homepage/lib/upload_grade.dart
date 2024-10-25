@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
-import 'package:lms_homepage/subject_page.dart';
-import 'upload_grade.dart';
+import 'package:lms_homepage/main.dart';
+import 'grade_input_page.dart';
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+class UploadGradePage extends StatefulWidget {
+  const UploadGradePage({super.key});
 
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  _UploadGradePageState createState() => _UploadGradePageState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _UploadGradePageState extends State<UploadGradePage> {
   bool isSidebarExpanded = false;
-  bool isHovering = false; // For hover effect on Edit Profile
+  bool isHovering = false;
 
   @override
   Widget build(BuildContext context) {
@@ -192,44 +192,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Class Cards
-                  Expanded(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 1.5,
-                        crossAxisSpacing: 20,
-                        mainAxisSpacing: 20,
-                      ),
-                      itemCount: 4,
-                      itemBuilder: (context, index) {
-                        final classData = [
-                          {
-                            "name": "Data Structure and Algorithm",
-                            "section": "BSIT - 2C",
-                            "room": "203"
-                          },
-                          {
-                            "name": "Project Management",
-                            "section": "BSIT - 3D",
-                            "room": "203"
-                          },
-                          {
-                            "name": "Living in IT Era",
-                            "section": "BSIT - 1A",
-                            "room": "210"
-                          },
-                          {
-                            "name": "Introduction to Computing",
-                            "section": "BSIT - 1D",
-                            "room": "207"
-                          }
-                        ][index];
-
-                        return classCard(classData['name']!,
-                            classData['section']!, classData['room']!);
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: const Icon(Icons.home),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DashboardScreen(),
+                          ),
+                        );
                       },
+                      color: const Color(0xFF2CB944),
+                      tooltip: 'Go to Home',
+                      iconSize: 40,
+                    ),
+                  ),
+
+                  // Title for Upload Grades
+                  const Text(
+                    "Upload Grades",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    "Select Course:",
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Class Cards for selecting courses to upload grades
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        classCard(
+                            "Data Structure and Algorithm", "BSIT - 2C", "203"),
+                        classCard("Project Management", "BSIT - 3D", "203"),
+                        classCard("Living in IT Era", "BSIT - 1A", "210"),
+                        classCard(
+                            "Introduction to Computing", "BSIT - 1D", "207"),
+                      ],
                     ),
                   ),
                 ],
@@ -242,19 +250,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget classCard(String className, String section, String room) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const SubjectPage(),
-          ),
-        );
-      },
-      child: Card(
-        elevation: 3,
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    return Card(
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GradeInputPage(
+                className: className,
+                section: section,
+                room: room,
+              ),
+            ),
+          );
+        },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -283,58 +295,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
-                trailing: PopupMenuButton(
-                  icon: const Icon(Icons.more_vert),
-                  onSelected: (value) {
-                    if (value == 'open') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SubjectPage(),
-                        ),
-                      );
-                    } else if (value == 'archive') {
-                      _showConfirmationDialog(className);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                        value: 'open', child: Text("Open Class")),
-                    const PopupMenuItem(
-                        value: 'archive', child: Text("Archive Class")),
-                  ],
-                ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  void _showConfirmationDialog(String className) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Archive'),
-          content: Text('Are you sure you want to archive "$className"?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Yes'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('No'),
-            ),
-          ],
-        );
-      },
     );
   }
 }
@@ -346,6 +311,6 @@ void main() {
       iconTheme: const IconThemeData(color: Colors.black),
       useMaterial3: true,
     ),
-    home: const DashboardScreen(),
+    home: const UploadGradePage(),
   ));
 }

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
-import 'package:lms_homepage/main.dart';
-import 'grade_input_page.dart';
+import 'package:lms_homepage/upload_grade.dart';
+import 'subject_page.dart';
 
-class UploadGradePage extends StatefulWidget {
-  const UploadGradePage({super.key});
+class CreatePostPage extends StatefulWidget {
+  const CreatePostPage({super.key});
 
   @override
-  _UploadGradePageState createState() => _UploadGradePageState();
+  _CreatePostPageState createState() => _CreatePostPageState();
 }
 
-class _UploadGradePageState extends State<UploadGradePage> {
+class _CreatePostPageState extends State<CreatePostPage> {
   bool isSidebarExpanded = false;
   bool isHovering = false;
 
@@ -20,7 +20,6 @@ class _UploadGradePageState extends State<UploadGradePage> {
     return Scaffold(
       body: Row(
         children: [
-          // Sidebar
           MouseRegion(
             onEnter: (_) {
               setState(() {
@@ -78,7 +77,7 @@ class _UploadGradePageState extends State<UploadGradePage> {
                               ),
                               decoration: BoxDecoration(
                                 color: isHovering
-                                    ? const Color.fromRGBO(44, 155, 68, 1)
+                                    ? const Color.fromARGB(255, 44, 155, 68)
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -154,90 +153,153 @@ class _UploadGradePageState extends State<UploadGradePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const SizedBox(height: 20),
+
                   // Header
-                  const Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        CircleAvatar(
-                          radius: 26,
-                          backgroundImage: AssetImage('assets/plsp.png'),
-                        ),
-                        SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Pamantasan ng Lungsod ng San Pablo",
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              'Brgy. San Jose, San Pablo City',
-                              style: TextStyle(fontSize: 10),
-                            ),
-                            Text(
-                              'Tel No: (049) 536-7830',
-                              style: TextStyle(fontSize: 10),
-                            ),
-                            Text(
-                              'Email Address: plspofficial@plsp.edu.ph',
-                              style: TextStyle(fontSize: 10),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: IconButton(
-                      icon: const Icon(Icons.home),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const DashboardScreen(),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 26,
+                        backgroundImage: AssetImage('assets/plsp.png'),
+                      ),
+                      SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Pamantasan ng Lungsod ng San Pablo",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
                           ),
-                        );
-                      },
-                      color: const Color(0xFF2CB944),
-                      tooltip: 'Go to Home',
-                      iconSize: 40,
-                    ),
+                          Text(
+                            'Brgy. San Jose, San Pablo City',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                          Text(
+                            'Tel No: (049) 536-7830',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                          Text(
+                            'Email Address: plspofficial@plsp.edu.ph',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 20),
 
-                  // Title for Upload Grades
-                  const Text(
-                    "Upload Grades",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                  // Back button
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SubjectPage()),
+                      );
+                    },
+                    child: Row(
+                      children: const [
+                        Icon(Icons.arrow_back),
+                        SizedBox(width: 8),
+                        Text(
+                          'Back',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ],
                     ),
                   ),
-                  const Text(
-                    "Select Course:",
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
+                  const SizedBox(height: 20),
+
+                  // Input field with teacher's image
+                  Stack(
+                    children: [
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Post an Activity or Announcement',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          contentPadding:
+                              const EdgeInsets.only(left: 60, top: 15),
+                        ),
+                        maxLines: 6,
+                      ),
+                      Positioned(
+                        left: 10,
+                        top: 10,
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundImage:
+                              const AssetImage('assets/aliceg.jpg'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Icons for Google Drive, YouTube, Upload, and Link
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      IconButton(
+                        icon: Image.asset(
+                          'gdrive.png',
+                          width: 40,
+                          height: 40,
+                        ),
+                        onPressed: () {
+                          // Implement Google Drive functionality
+                        },
+                      ),
+                      IconButton(
+                        icon: Image.asset(
+                          'yt.png',
+                          width: 40,
+                          height: 40,
+                        ),
+                        onPressed: () {
+                          // Implement YouTube functionality
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.upload_file, size: 30),
+                        onPressed: () {
+                          // Implement file upload functionality
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.link, size: 30),
+                        onPressed: () {
+                          // Implement link functionality
+                        },
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 20),
 
-                  // Class Cards for selecting courses to upload grades
-                  Expanded(
-                    child: ListView(
-                      children: [
-                        classCard(
-                            "Data Structure and Algorithm", "BSIT - 2C", "203"),
-                        classCard("Project Management", "BSIT - 3D", "203"),
-                        classCard("Living in IT Era", "BSIT - 1A", "210"),
-                        classCard(
-                            "Introduction to Computing", "BSIT - 1D", "207"),
-                      ],
+                  // Publish button aligned to the right
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Implement publish functionality
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 20),
+                        backgroundColor: const Color.fromRGBO(44, 155, 68, 1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Publish',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
                     ),
                   ),
                 ],
@@ -248,69 +310,4 @@ class _UploadGradePageState extends State<UploadGradePage> {
       ),
     );
   }
-
-  Widget classCard(String className, String section, String room) {
-    return Card(
-      elevation: 3,
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GradeInputPage(
-                className: className,
-                section: section,
-                room: room,
-              ),
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListTile(
-                leading: const CircleAvatar(
-                  radius: 40,
-                  backgroundImage: AssetImage('assets/ccst.jpg'),
-                ),
-                title: const Text(
-                  "College of Computer Studies and Technology",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-                    Text(
-                      className,
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                    Text(
-                      "$section\nRoom $room",
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      iconTheme: const IconThemeData(color: Colors.black),
-      useMaterial3: true,
-    ),
-    home: const UploadGradePage(),
-  ));
 }

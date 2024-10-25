@@ -20,5 +20,19 @@ flutter:
     - assets/plsp.png
     - assets/ccst.jpg
     - assets/aliceg.jpg
+    - assets/gdrive.png
+    - assets/yt.png
+
   fonts:
-    - family: MaterialIcons
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-Regular.ttf
+        - asset: assets/fonts/Montserrat-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Montserrat-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Montserrat-BoldItalic.ttf
+          weight: 700
+          style: italic
+
+

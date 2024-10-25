@@ -1,19 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
-import 'package:lms_homepage/subject_page.dart';
-import 'upload_grade.dart';
+import 'package:lms_homepage/main.dart';
+import 'package:lms_homepage/upload_grade.dart';
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+class ActivityDetailsPage extends StatefulWidget {
+  const ActivityDetailsPage({super.key});
 
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  _ActivityDetailsPageState createState() => _ActivityDetailsPageState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
   bool isSidebarExpanded = false;
-  bool isHovering = false; // For hover effect on Edit Profile
+  bool isHovering = false;
+
+  // Mock data for graded, missing, and submitted students
+  final List<String> gradedStudents = [
+    'Student 1',
+    'Student 2',
+    'Student 3',
+    'Student 4'
+  ];
+  final List<String> missingStudents = [
+    'Student 5',
+    'Student 6',
+    'Student 7',
+    'Student 8'
+  ];
+  final List<String> submittedStudents = [
+    'Student 9',
+    'Student 10',
+    'Student 11',
+    'Student 12'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -192,46 +212,127 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Class Cards
-                  Expanded(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 1.5,
-                        crossAxisSpacing: 20,
-                        mainAxisSpacing: 20,
-                      ),
-                      itemCount: 4,
-                      itemBuilder: (context, index) {
-                        final classData = [
-                          {
-                            "name": "Data Structure and Algorithm",
-                            "section": "BSIT - 2C",
-                            "room": "203"
-                          },
-                          {
-                            "name": "Project Management",
-                            "section": "BSIT - 3D",
-                            "room": "203"
-                          },
-                          {
-                            "name": "Living in IT Era",
-                            "section": "BSIT - 1A",
-                            "room": "210"
-                          },
-                          {
-                            "name": "Introduction to Computing",
-                            "section": "BSIT - 1D",
-                            "room": "207"
-                          }
-                        ][index];
-
-                        return classCard(classData['name']!,
-                            classData['section']!, classData['room']!);
+                  // Home Button
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: const Icon(Icons.home),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DashboardScreen(),
+                          ),
+                        );
                       },
+                      color: const Color.fromRGBO(44, 155, 68, 1),
+                      tooltip: 'Go to Home',
+                      iconSize: 40,
                     ),
                   ),
+
+                  const SizedBox(height: 20),
+
+                  // Activity Details Section
+                  const Text(
+                    "Activity Details",
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Activity description
+                  const Text(
+                    "This is a detailed description of the activity. It provides information about the requirements and expectations.",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Attached Document/Link Area
+                  const Text(
+                    "Attached Document/Links:",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: () {
+                      // Add functionality for document/link
+                    },
+                    child: const Text(
+                      "Activity_Details.pdf",
+                      style: TextStyle(color: Colors.blue),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Grid Layout for Submission Status
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Graded Column
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "Graded",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Divider(),
+                            ...gradedStudents.map((student) => Center(
+                                  child: Text(student),
+                                )),
+                          ],
+                        ),
+                      ),
+                      const VerticalDivider(
+                          width: 1.0), // Divider between columns
+
+                      // Missing Column
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "Missing",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Divider(),
+                            ...missingStudents.map((student) => Center(
+                                  child: Text(student),
+                                )),
+                          ],
+                        ),
+                      ),
+                      const VerticalDivider(
+                          width: 1.0), // Divider between columns
+
+                      // Submitted Column
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "Submitted",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Divider(),
+                            ...submittedStudents.map((student) => Center(
+                                  child: Text(student),
+                                )),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
                 ],
               ),
             ),
@@ -240,112 +341,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
-  Widget classCard(String className, String section, String room) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const SubjectPage(),
-          ),
-        );
-      },
-      child: Card(
-        elevation: 3,
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListTile(
-                leading: const CircleAvatar(
-                  radius: 40,
-                  backgroundImage: AssetImage('assets/ccst.jpg'),
-                ),
-                title: const Text(
-                  "College of Computer Studies and Technology",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-                    Text(
-                      className,
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                    Text(
-                      "$section\nRoom $room",
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                  ],
-                ),
-                trailing: PopupMenuButton(
-                  icon: const Icon(Icons.more_vert),
-                  onSelected: (value) {
-                    if (value == 'open') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SubjectPage(),
-                        ),
-                      );
-                    } else if (value == 'archive') {
-                      _showConfirmationDialog(className);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                        value: 'open', child: Text("Open Class")),
-                    const PopupMenuItem(
-                        value: 'archive', child: Text("Archive Class")),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showConfirmationDialog(String className) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Archive'),
-          content: Text('Are you sure you want to archive "$className"?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Yes'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('No'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      iconTheme: const IconThemeData(color: Colors.black),
-      useMaterial3: true,
-    ),
-    home: const DashboardScreen(),
-  ));
 }

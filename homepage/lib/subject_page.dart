@@ -3,6 +3,7 @@ import 'package:lms_homepage/activity_details.dart';
 import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/create_post_page.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
+import 'package:lms_homepage/login_page.dart';
 import 'main.dart';
 import 'upload_grade.dart';
 
@@ -17,6 +18,51 @@ class SubjectPage extends StatefulWidget {
 class _SubjectPageState extends State<SubjectPage> {
   bool isSidebarExpanded = false;
   bool isHovering = false;
+
+  final ScrollController _scrollController = ScrollController();
+  bool showLeftArrow = false;
+  bool showRightArrow = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+
+    setState(() {
+      // Show Left Arrow if not at the start
+      showLeftArrow = currentScroll > 0;
+      // Show Right Arrow if not at the end
+      showRightArrow = currentScroll < maxScroll;
+    });
+  }
+
+  void _scrollToLeft() {
+    _scrollController.animateTo(
+      _scrollController.position.pixels - 200, // Adjust the amount to scroll
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.ease,
+    );
+  }
+
+  void _scrollToRight() {
+    _scrollController.animateTo(
+      _scrollController.position.pixels + 200, // Adjust the amount to scroll
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.ease,
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,11 +184,21 @@ class _SubjectPageState extends State<SubjectPage> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      children: [
-                        const Icon(Icons.logout, size: 40),
-                        if (isSidebarExpanded) const Text("Log Out"),
-                      ],
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginPage(),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          const Icon(Icons.logout, size: 40),
+                          if (isSidebarExpanded) const Text("Log Out"),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -273,20 +329,14 @@ class _SubjectPageState extends State<SubjectPage> {
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: Row(
-                                children: [
-                                  // Learning Materials
-                                  ...List.generate(6, (index) {
-                                    final items = [
-                                      'Module 1',
-                                      'Video 1',
-                                      'Video 2',
-                                      'Module 2',
-                                      'Module 3',
-                                      'Video 3'
-                                    ];
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8.0),
+                                children: List.generate(9, (index) {
+                                  final week = 'Week ${index + 1}';
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    child: GestureDetector(
+                                      onTap: () =>
+                                          _showWeekModal(context, week),
                                       child: Card(
                                         elevation: 3,
                                         shape: RoundedRectangleBorder(
@@ -294,11 +344,12 @@ class _SubjectPageState extends State<SubjectPage> {
                                               BorderRadius.circular(10),
                                         ),
                                         child: SizedBox(
-                                          width: 120,
+                                          width:
+                                              140, // Increased width to avoid overlap
                                           height: 100,
                                           child: Center(
                                             child: Text(
-                                              items[index],
+                                              week,
                                               style: const TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
@@ -307,54 +358,13 @@ class _SubjectPageState extends State<SubjectPage> {
                                           ),
                                         ),
                                       ),
-                                    );
-                                  }),
-
-                                  // Add Content Button
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0),
-                                    child: Card(
-                                      elevation: 3,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: SizedBox(
-                                        width: 120,
-                                        height: 100,
-                                        child: ElevatedButton(
-                                          onPressed: () {
-                                            // Add content functionality
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                const Color.fromRGBO(
-                                                    44, 155, 68, 1),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: const [
-                                              Icon(Icons.add),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                "Add",
-                                                style: TextStyle(fontSize: 16),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
                                     ),
-                                  ),
-                                ],
+                                  );
+                                }),
                               ),
                             ),
                           ),
+
                           const SizedBox(height: 20),
 
                           // Input Bar for Teacher to Upload Activity/Announcement
@@ -491,6 +501,59 @@ class _SubjectPageState extends State<SubjectPage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showWeekModal(BuildContext context, String week) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          insetPadding: const EdgeInsets.symmetric(
+              horizontal: 50), // Increase horizontal padding
+          contentPadding: const EdgeInsets.all(20), // Add padding inside modal
+          title: Text(
+            '$week Materials',
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            // Make content scrollable
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Uploaded Modules and Videos:",
+                  style: TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 10),
+                // Sample uploaded content
+                const Text("Module 1 - [Link]", style: TextStyle(fontSize: 14)),
+                const Text("Video 1 - [Link]", style: TextStyle(fontSize: 14)),
+                const Text("Module 2 - [Link]", style: TextStyle(fontSize: 14)),
+                const Text("Video 2 - [Link]", style: TextStyle(fontSize: 14)),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    // Handle content upload functionality
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromRGBO(44, 155, 68, 1),
+                  ),
+                  child: const Text("Add Content"),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

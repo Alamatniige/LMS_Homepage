@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
+import 'package:lms_homepage/login_page.dart';
 import 'package:lms_homepage/main.dart';
 import 'package:lms_homepage/upload_grade.dart';
 
@@ -171,11 +172,21 @@ class _GradeInputPageState extends State<GradeInputPage> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      children: [
-                        const Icon(Icons.logout, size: 40),
-                        if (isSidebarExpanded) const Text("Log Out"),
-                      ],
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginPage(),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          const Icon(Icons.logout, size: 40),
+                          if (isSidebarExpanded) const Text("Log Out"),
+                        ],
+                      ),
                     ),
                   ),
                 ],

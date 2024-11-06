@@ -3,6 +3,31 @@ import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
 import 'package:lms_homepage/subject_page.dart';
 import 'upload_grade.dart';
+import 'package:lms_homepage/login_page.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        iconTheme: const IconThemeData(color: Colors.black),
+        useMaterial3: true,
+      ),
+      home: const LoginPage(), // Set LoginPage as the initial route
+      routes: {
+        '/dashboard': (context) =>
+            const DashboardScreen(), // Define the route for the dashboard
+      },
+    );
+  }
+}
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -135,11 +160,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      children: [
-                        const Icon(Icons.logout, size: 40),
-                        if (isSidebarExpanded) const Text("Log Out"),
-                      ],
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginPage(),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          const Icon(Icons.logout, size: 40),
+                          if (isSidebarExpanded) const Text("Log Out"),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -227,8 +262,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           }
                         ][index];
 
-                        return classCard(classData['name']!,
-                            classData['section']!, classData['room']!);
+                        return classCard(
+                          classData['name']!,
+                          classData['section']!,
+                          classData['room']!,
+                        );
                       },
                     ),
                   ),
@@ -322,6 +360,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           actions: [
             TextButton(
               onPressed: () {
+                // Implement the archive logic here if needed
                 Navigator.of(context).pop();
               },
               child: const Text('Yes'),
@@ -337,15 +376,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
     );
   }
-}
 
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      iconTheme: const IconThemeData(color: Colors.black),
-      useMaterial3: true,
-    ),
-    home: const DashboardScreen(),
-  ));
+  void main() {
+    runApp(MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        iconTheme: const IconThemeData(color: Colors.black),
+        useMaterial3: true,
+      ),
+      home: const DashboardScreen(),
+    ));
+  }
 }

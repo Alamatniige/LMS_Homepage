@@ -361,16 +361,16 @@ class _GradeInputPageState extends State<GradeInputPage> {
           TableRow(
             children: [
               // Student Image and Name
-              Padding(
-                padding: const EdgeInsets.all(8.0),
+              const Padding(
+                padding: EdgeInsets.all(8.0),
                 child: Row(
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 20,
                       backgroundImage: AssetImage('assets/aliceg.jpg'),
                     ),
-                    const SizedBox(width: 8),
-                    const Text(
+                    SizedBox(width: 8),
+                    Text(
                       "Alice Guo",
                       style: TextStyle(fontSize: 16),
                     ),
@@ -427,7 +427,7 @@ class _GradeInputPageState extends State<GradeInputPage> {
             ],
           ),
         ],
-        border: TableBorder.symmetric(
+        border: const TableBorder.symmetric(
           inside: BorderSide(
             color: Colors.black,
             width: 1,

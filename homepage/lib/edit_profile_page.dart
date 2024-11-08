@@ -403,7 +403,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             color: Color.fromARGB(255, 102, 102, 102),
           ),
           hintStyle: TextStyle(
-            color: Color.fromARGB(255, 102, 102, 102).withOpacity(0.7),
+            color: const Color.fromARGB(255, 102, 102, 102).withOpacity(0.7),
             fontSize: 12,
             fontWeight: FontWeight.normal,
           ),

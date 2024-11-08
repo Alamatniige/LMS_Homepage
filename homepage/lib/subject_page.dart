@@ -357,8 +357,7 @@ class _SubjectPageState extends State<SubjectPage> {
                                                     BorderRadius.circular(10),
                                               ),
                                               child: SizedBox(
-                                                width:
-                                                    140, // Increased width to avoid overlap
+                                                width: 140,
                                                 height: 100,
                                                 child: Center(
                                                   child: Text(
@@ -530,53 +529,138 @@ class _SubjectPageState extends State<SubjectPage> {
   }
 
   void _showWeekModal(BuildContext context, String week) {
+    List<Map<String, String>> modules = []; // List to hold added modules
+
+    void _addModule() {
+      setState(() {
+        modules.add({'name': 'Module ${modules.length + 1}'});
+      });
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          insetPadding: const EdgeInsets.symmetric(
-              horizontal: 50), // Increase horizontal padding
-          contentPadding: const EdgeInsets.all(20), // Add padding inside modal
-          title: Text(
-            '$week Materials',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          content: SingleChildScrollView(
-            // Make content scrollable
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Uploaded Modules and Videos:",
-                  style: TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 10),
-                // Sample uploaded content
-                const Text("Module 1 - [Link]", style: TextStyle(fontSize: 14)),
-                const Text("Video 1 - [Link]", style: TextStyle(fontSize: 14)),
-                const Text("Module 2 - [Link]", style: TextStyle(fontSize: 14)),
-                const Text("Video 2 - [Link]", style: TextStyle(fontSize: 14)),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    // Handle content upload functionality
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromRGBO(44, 155, 68, 1),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 50),
+              contentPadding: const EdgeInsets.all(20),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '$week',
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  child: const Text("Add Content"),
+                  IconButton(
+                    icon: const Icon(Icons.add, color: Colors.grey),
+                    onPressed: _addModule, // Add new module when clicked
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Using a ListView builder for a dynamic list
+                    for (var module in modules) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Column(
+                            children: [
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(Icons.insert_drive_file,
+                                    size: 30),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                module['name']!,
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Additional Learning Materials",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: Image.asset(
+                                        'assets/gdrive.png', // GDrive asset
+                                        width: 30,
+                                        height: 30,
+                                      ),
+                                      onPressed: () {
+                                        // Handle Google Drive action
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: Image.asset(
+                                        'assets/yt.png', // YouTube asset
+                                        width: 30,
+                                        height: 30,
+                                      ),
+                                      onPressed: () {
+                                        // Handle YouTube action
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.link,
+                                          color: Colors.black),
+                                      iconSize: 30,
+                                      onPressed: () {
+                                        // Handle link action
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add,
+                                          color: Colors.grey),
+                                      iconSize: 30,
+                                      onPressed: () {
+                                        // Handle add new content
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(
+                          thickness: 1,
+                          color: Colors.grey), // Separator line for modules
+                    ],
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text("Close"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
                 ),
               ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text("Close"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
+            );
+          },
         );
       },
     );

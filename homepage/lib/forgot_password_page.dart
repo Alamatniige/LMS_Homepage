@@ -92,7 +92,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           ),
                           const SizedBox(height: 4.0),
                           // Shortened input field width
-                          Container(
+                          SizedBox(
                             width: double.infinity,
                             child: TextFormField(
                               controller: _emailController,
@@ -191,19 +191,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return Container(
       color: const Color(0xFFF2F8FC),
       padding: const EdgeInsets.all(16.0),
-      child: Center(
+      child: const Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             CircleAvatar(
               radius: 26,
-              backgroundImage: const AssetImage('assets/plsp.png'),
+              backgroundImage: AssetImage('assets/plsp.png'),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   "Pamantasan ng Lungsod ng San Pablo",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

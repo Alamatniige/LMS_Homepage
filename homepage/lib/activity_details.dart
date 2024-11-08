@@ -180,172 +180,187 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
 
           // Main Content
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  const Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        CircleAvatar(
-                          radius: 26,
-                          backgroundImage: AssetImage('assets/plsp.png'),
-                        ),
-                        SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Column(
+                    children: [
+                      const Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              "Pamantasan ng Lungsod ng San Pablo",
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            CircleAvatar(
+                              radius: 26,
+                              backgroundImage: AssetImage('assets/plsp.png'),
                             ),
-                            Text(
-                              'Brgy. San Jose, San Pablo City',
-                              style: TextStyle(fontSize: 10),
+                            SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Pamantasan ng Lungsod ng San Pablo",
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  'Brgy. San Jose, San Pablo City',
+                                  style: TextStyle(fontSize: 10),
+                                ),
+                                Text(
+                                  'Tel No: (049) 536-7830',
+                                  style: TextStyle(fontSize: 10),
+                                ),
+                                Text(
+                                  'Email Address: plspofficial@plsp.edu.ph',
+                                  style: TextStyle(fontSize: 10),
+                                ),
+                              ],
                             ),
-                            Text(
-                              'Tel No: (049) 536-7830',
-                              style: TextStyle(fontSize: 10),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Home Button
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: IconButton(
+                          icon: const Icon(Icons.home),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const DashboardScreen(),
+                              ),
+                            );
+                          },
+                          color: const Color.fromRGBO(44, 155, 68, 1),
+                          tooltip: 'Go to Home',
+                          iconSize: 40,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Activity Details Section
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    "Activity Details",
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Activity description
+                        const Text(
+                          "This is a detailed description of the activity. It provides information about the requirements and expectations.",
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Attached Document/Link Area
+                        const Text(
+                          "Attached Document/Links:",
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 10),
+                        GestureDetector(
+                          onTap: () {
+                            // Add functionality for document/link
+                          },
+                          child: const Text(
+                            "Activity_Details.pdf",
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Grid Layout for Submission Status
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            // Graded Column
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    "Graded",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Divider(),
+                                  ...gradedStudents.map((student) => Center(
+                                        child: Text(student),
+                                      )),
+                                ],
+                              ),
                             ),
-                            Text(
-                              'Email Address: plspofficial@plsp.edu.ph',
-                              style: TextStyle(fontSize: 10),
+                            const VerticalDivider(
+                                width: 1.0), // Divider between columns
+
+                            // Missing Column
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    "Missing",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Divider(),
+                                  ...missingStudents.map((student) => Center(
+                                        child: Text(student),
+                                      )),
+                                ],
+                              ),
+                            ),
+                            const VerticalDivider(
+                                width: 1.0), // Divider between columns
+
+                            // Submitted Column
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    "Submitted",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Divider(),
+                                  ...submittedStudents.map((student) => Center(
+                                        child: Text(student),
+                                      )),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-
-                  // Home Button
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: IconButton(
-                      icon: const Icon(Icons.home),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const DashboardScreen(),
-                          ),
-                        );
-                      },
-                      color: const Color.fromRGBO(44, 155, 68, 1),
-                      tooltip: 'Go to Home',
-                      iconSize: 40,
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Activity Details Section
-                  const Text(
-                    "Activity Details",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Activity description
-                  const Text(
-                    "This is a detailed description of the activity. It provides information about the requirements and expectations.",
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Attached Document/Link Area
-                  const Text(
-                    "Attached Document/Links:",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: () {
-                      // Add functionality for document/link
-                    },
-                    child: const Text(
-                      "Activity_Details.pdf",
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Grid Layout for Submission Status
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Graded Column
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "Graded",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Divider(),
-                            ...gradedStudents.map((student) => Center(
-                                  child: Text(student),
-                                )),
-                          ],
-                        ),
-                      ),
-                      const VerticalDivider(
-                          width: 1.0), // Divider between columns
-
-                      // Missing Column
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "Missing",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Divider(),
-                            ...missingStudents.map((student) => Center(
-                                  child: Text(student),
-                                )),
-                          ],
-                        ),
-                      ),
-                      const VerticalDivider(
-                          width: 1.0), // Divider between columns
-
-                      // Submitted Column
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "Submitted",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Divider(),
-                            ...submittedStudents.map((student) => Center(
-                                  child: Text(student),
-                                )),
-                          ],
-                        ),
-                      ),
-                    ],
-                  )
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

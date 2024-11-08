@@ -284,7 +284,7 @@ class _GradeInputPageState extends State<GradeInputPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Midterm and Finals Labels
+                  // Midterm Labels
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -293,23 +293,17 @@ class _GradeInputPageState extends State<GradeInputPage> {
                         "Midterm",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(width: 115),
-                      Text(
-                        "Finals",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(width: 223),
+                      SizedBox(width: 255),
                     ],
                   ),
 
                   const SizedBox(height: 8),
 
-                  // Student Grades Section
                   Expanded(
                     child: ListView.builder(
                       itemCount: _midtermGradeControllers.length,
                       itemBuilder: (context, index) {
-                        return _buildStudentGradeField(index);
+                        return _buildStudentGradeTable(index);
                       },
                     ),
                   ),
@@ -347,23 +341,6 @@ class _GradeInputPageState extends State<GradeInputPage> {
                           ),
                         ),
                         const SizedBox(width: 16),
-
-                        ElevatedButton.icon(
-                          onPressed: _lockAllGradesPrompt,
-                          icon: Icon(
-                            _allLocked() ? Icons.lock : Icons.lock_open,
-                            color: const Color(0xFF2C9B44),
-                          ),
-                          label: Text(
-                            _allLocked()
-                                ? "Unlock All Grades"
-                                : "Lock All Grades",
-                            style: const TextStyle(color: Color(0xFF2C9B44)),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -376,132 +353,103 @@ class _GradeInputPageState extends State<GradeInputPage> {
     );
   }
 
-  Widget _buildStudentGradeField(int index) {
+  Widget _buildStudentGradeTable(int index) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
+      child: Table(
         children: [
-          // Student Image and Name
-          const Row(
+          TableRow(
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundImage: AssetImage('assets/aliceg.jpg'),
+              // Student Image and Name
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 20,
+                      backgroundImage: AssetImage('assets/aliceg.jpg'),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      "Alice Guo",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
               ),
-              SizedBox(width: 8),
-              Text(
-                "Alice Guo",
-                style: TextStyle(fontSize: 16),
+              // Midterm Grade Dropdown
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: DropdownButtonFormField<String>(
+                  value: _midtermGradeControllers[index].text.isEmpty
+                      ? null
+                      : _midtermGradeControllers[index].text,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                  ),
+                  items: [
+                    '1.00',
+                    '1.25',
+                    '1.50',
+                    '1.75',
+                    '2.00',
+                    '2.25',
+                    '2.50',
+                    '2.75',
+                    '3.00',
+                    '3.25',
+                    '3.50',
+                    '3.75',
+                    '4.00',
+                    '5.00',
+                    'FAILED',
+                    'INC',
+                    'UW',
+                    'OW'
+                  ].map((String grade) {
+                    return DropdownMenuItem<String>(
+                      value: grade,
+                      child: Text(grade),
+                    );
+                  }).toList(),
+                  onChanged:
+                      !_isLocked[index] // Only allow change if not locked
+                          ? (value) {
+                              setState(() {
+                                _midtermGradeControllers[index].text =
+                                    value ?? '';
+                              });
+                            }
+                          : null,
+                  isExpanded: true,
+                ),
               ),
             ],
           ),
-
-          const Spacer(),
-
-          // Midterm Input Field
-          SizedBox(
-            width: 100,
-            child: TextField(
-              controller: _midtermGradeControllers[index],
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-              ),
-              enabled: !_isLocked[index],
-              keyboardType: TextInputType.number,
-            ),
-          ),
-
-          const SizedBox(width: 70), // Space between midterm and finals
-
-          // Finals Input Field
-          SizedBox(
-            width: 100,
-            child: TextField(
-              controller: _finalsGradeControllers[index],
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-              ),
-              enabled: !_isLocked[index],
-              keyboardType: TextInputType.number,
-            ),
-          ),
-          // Spacing in the left side
-          const SizedBox(width: 185),
         ],
+        border: TableBorder.symmetric(
+          inside: BorderSide(
+            color: Colors.black,
+            width: 1,
+          ),
+        ),
       ),
     );
   }
 
-  void _lockAllGrades() {
-    setState(() {
-      bool lockAll = !_allLocked();
-      for (int i = 0; i < _isLocked.length; i++) {
-        if (!_isSaved[i]) {
-          _isLocked[i] = lockAll;
-        }
-      }
-    });
-  }
-
-  bool _allLocked() {
-    return _isLocked.every((locked) => locked);
-  }
-
-  void _lockAllGradesPrompt() async {
-    if (!_allLocked()) {
-      // Show confirmation dialog if trying to unlock
-      bool confirmUnlock = await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text("Unlock All Grades?"),
-            content: const Text("Are you sure you want to unlock all grades?"),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(false); // Cancel unlock
-                },
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(true); // Confirm unlock
-                },
-                child: const Text("Yes"),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (confirmUnlock == true) {
-        _lockAllGrades(); // Unlock if confirmed
-      }
-    } else {
-      // Lock all without prompt
-      _lockAllGrades();
-    }
-  }
-
   void _saveGrades() {
+    // Save the inputted grades
     for (int i = 0; i < _midtermGradeControllers.length; i++) {
       String midtermGrade = _midtermGradeControllers[i].text;
       String finalsGrade = _finalsGradeControllers[i].text;
 
-      if (_isLocked[i]) {
-        _isSaved[i] = true; // Mark as saved
-      }
-
+      // Mark the grade as saved
+      _isSaved[i] = true; // Mark as saved after successful input
       print(
           "Saved Student ${i + 1} - Midterm: $midtermGrade, Finals: $finalsGrade");
     }
 
-    for (int i = 0; i < _midtermGradeControllers.length; i++) {
-      if (_isLocked[i]) {
-        _isLocked[i] = true;
-      }
-    }
-
+    // Show confirmation dialog for saving grades
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -510,7 +458,7 @@ class _GradeInputPageState extends State<GradeInputPage> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(context); // Close the dialog
             },
             child: const Text("OK"),
           ),
@@ -519,27 +467,60 @@ class _GradeInputPageState extends State<GradeInputPage> {
     );
   }
 
-  void _submitGrades() {
-    for (int i = 0; i < _midtermGradeControllers.length; i++) {
-      print(
-          "Student ${i + 1} - Midterm: ${_midtermGradeControllers[i].text}, Finals: ${_finalsGradeControllers[i].text}");
-    }
-
-    showDialog(
+  void _submitGrades() async {
+    // Show confirmation dialog for submitting grades
+    bool confirmSubmit = await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Grades Submitted"),
-        content: const Text("All grades have been successfully submitted."),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text("OK"),
-          ),
-        ],
-      ),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Confirm Submission"),
+          content: const Text(
+              "Are you sure you want to submit all grades? This action cannot be undone."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // Cancel submission
+              },
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // Confirm submission
+              },
+              child: const Text("Submit"),
+            ),
+          ],
+        );
+      },
     );
+
+    if (confirmSubmit) {
+      // Proceed with grade submission if confirmed
+      setState(() {
+        for (int i = 0; i < _midtermGradeControllers.length; i++) {
+          // Lock the grades by making the input fields uneditable
+          _isLocked[i] = true;
+        }
+      });
+
+      // Show confirmation dialog for successful submission
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Grades Submitted"),
+          content: const Text("All grades have been successfully submitted."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(
+                    context); // Optional: Navigate back after submission
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }

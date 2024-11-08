@@ -21,6 +21,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
     return Scaffold(
       body: Row(
         children: [
+          // Sidebar
           MouseRegion(
             onEnter: (_) {
               setState(() {
@@ -159,15 +160,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
           // Main Content
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-
-                  // Header
-                  const Row(
+            child: Column(
+              children: [
+                // Header
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -200,121 +198,133 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                ),
 
-                  // Back button
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const SubjectPage()),
-                      );
-                    },
-                    child: Row(
-                      children: const [
-                        Icon(Icons.arrow_back),
-                        SizedBox(width: 8),
-                        Text(
-                          'Back',
-                          style: TextStyle(fontSize: 18),
+                // Scrollable Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Back button
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SubjectPage()),
+                            );
+                          },
+                          child: const Row(
+                            children: [
+                              Icon(Icons.arrow_back),
+                              SizedBox(width: 8),
+                              Text(
+                                'Back',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Input field with teacher's image
+                        Stack(
+                          children: [
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'Post an Activity or Announcement',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                contentPadding:
+                                    const EdgeInsets.only(left: 60, top: 15),
+                              ),
+                              maxLines: 6,
+                            ),
+                            const Positioned(
+                              left: 10,
+                              top: 10,
+                              child: CircleAvatar(
+                                radius: 20,
+                                backgroundImage:
+                                    AssetImage('assets/aliceg.jpg'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Icons for Google Drive, YouTube, Upload, and Link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            IconButton(
+                              icon: Image.asset(
+                                'assets/gdrive.png',
+                                width: 40,
+                                height: 40,
+                              ),
+                              onPressed: () {
+                                // Implement Google Drive functionality
+                              },
+                            ),
+                            IconButton(
+                              icon: Image.asset(
+                                'assets/yt.png',
+                                width: 40,
+                                height: 40,
+                              ),
+                              onPressed: () {
+                                // Implement YouTube functionality
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.upload_file, size: 30),
+                              onPressed: () {
+                                // Implement file upload functionality
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.link, size: 30),
+                              onPressed: () {
+                                // Implement link functionality
+                              },
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Publish button aligned to the right
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Implement publish functionality
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 20),
+                              backgroundColor:
+                                  const Color.fromRGBO(44, 155, 68, 1),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              'Publish',
+                              style:
+                                  TextStyle(fontSize: 16, color: Colors.white),
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-
-                  // Input field with teacher's image
-                  Stack(
-                    children: [
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Post an Activity or Announcement',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          contentPadding:
-                              const EdgeInsets.only(left: 60, top: 15),
-                        ),
-                        maxLines: 6,
-                      ),
-                      Positioned(
-                        left: 10,
-                        top: 10,
-                        child: CircleAvatar(
-                          radius: 20,
-                          backgroundImage:
-                              const AssetImage('assets/aliceg.jpg'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Icons for Google Drive, YouTube, Upload, and Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      IconButton(
-                        icon: Image.asset(
-                          'gdrive.png',
-                          width: 40,
-                          height: 40,
-                        ),
-                        onPressed: () {
-                          // Implement Google Drive functionality
-                        },
-                      ),
-                      IconButton(
-                        icon: Image.asset(
-                          'yt.png',
-                          width: 40,
-                          height: 40,
-                        ),
-                        onPressed: () {
-                          // Implement YouTube functionality
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.upload_file, size: 30),
-                        onPressed: () {
-                          // Implement file upload functionality
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.link, size: 30),
-                        onPressed: () {
-                          // Implement link functionality
-                        },
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Publish button aligned to the right
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Implement publish functionality
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 20),
-                        backgroundColor: const Color.fromRGBO(44, 155, 68, 1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        'Publish',
-                        style: TextStyle(fontSize: 16, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

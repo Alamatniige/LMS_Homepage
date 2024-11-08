@@ -320,48 +320,73 @@ class _SubjectPageState extends State<SubjectPage> {
                           const Text(
                             "Learning Materials:",
                             style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 10),
-
                           SizedBox(
                             height: 120,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: List.generate(9, (index) {
-                                  final week = 'Week ${index + 1}';
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0),
-                                    child: GestureDetector(
-                                      onTap: () =>
-                                          _showWeekModal(context, week),
-                                      child: Card(
-                                        elevation: 3,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                        child: SizedBox(
-                                          width:
-                                              140, // Increased width to avoid overlap
-                                          height: 100,
-                                          child: Center(
-                                            child: Text(
-                                              week,
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
+                            child: Row(
+                              children: [
+                                Visibility(
+                                  visible: showLeftArrow,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.arrow_left),
+                                    iconSize: 30,
+                                    onPressed: _scrollToLeft,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    controller: _scrollController,
+                                    child: Row(
+                                      children: List.generate(9, (index) {
+                                        final week = 'Week ${index + 1}';
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8.0),
+                                          child: GestureDetector(
+                                            onTap: () =>
+                                                _showWeekModal(context, week),
+                                            child: Card(
+                                              elevation: 3,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: SizedBox(
+                                                width:
+                                                    140, // Increased width to avoid overlap
+                                                height: 100,
+                                                child: Center(
+                                                  child: Text(
+                                                    week,
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      ),
+                                        );
+                                      }),
                                     ),
-                                  );
-                                }),
-                              ),
+                                  ),
+                                ),
+                                Visibility(
+                                  visible: showRightArrow,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.arrow_right),
+                                    iconSize: 30,
+                                    onPressed: _scrollToRight,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
 
@@ -430,20 +455,20 @@ class _SubjectPageState extends State<SubjectPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
+                                  const Row(
                                     children: [
                                       // Teacher's Image
-                                      const CircleAvatar(
+                                      CircleAvatar(
                                         radius: 25,
                                         backgroundImage:
                                             AssetImage('assets/aliceg.jpg'),
                                       ),
-                                      const SizedBox(width: 10),
+                                      SizedBox(width: 10),
                                       // Teacher's Name and Date
                                       Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
-                                        children: const [
+                                        children: [
                                           Text("Alice Guo",
                                               style: TextStyle(
                                                   fontWeight: FontWeight.bold)),

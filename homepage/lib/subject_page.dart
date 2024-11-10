@@ -531,7 +531,7 @@ class _SubjectPageState extends State<SubjectPage> {
   void _showWeekModal(BuildContext context, String week) {
     List<Map<String, String>> modules = []; // List to hold added modules
 
-    void _addModule() {
+    void addModule() {
       setState(() {
         modules.add({'name': 'Module ${modules.length + 1}'});
       });
@@ -550,13 +550,13 @@ class _SubjectPageState extends State<SubjectPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '$week',
+                    week,
                     style: const TextStyle(
                         fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
                     icon: const Icon(Icons.add, color: Colors.grey),
-                    onPressed: _addModule, // Add new module when clicked
+                    onPressed: addModule, // Add new module when clicked
                   ),
                 ],
               ),

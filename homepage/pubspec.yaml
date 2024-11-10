@@ -9,6 +9,8 @@ dependencies:
     sdk: flutter
   font_awesome_flutter: ^10.0.0
   http: ^0.13.6
+  flutter_typeahead: ^4.0.0
+
 
 dev_dependencies:
   flutter_test:
@@ -23,6 +25,12 @@ flutter:
     - assets/aliceg.jpg
     - assets/gdrive.png
     - assets/yt.png
+    - assets/barangay.json
+    - assets/city.json
+    - assets/province.json
+    - assets/region.json
+
+
 
   fonts:
     - family: Montserrat

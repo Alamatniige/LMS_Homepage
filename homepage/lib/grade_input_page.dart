@@ -18,6 +18,7 @@ class GradeInputPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _GradeInputPageState createState() => _GradeInputPageState();
 }
 
@@ -445,6 +446,7 @@ class _GradeInputPageState extends State<GradeInputPage> {
 
       // Mark the grade as saved
       _isSaved[i] = true; // Mark as saved after successful input
+      // ignore: avoid_print
       print(
           "Saved Student ${i + 1} - Midterm: $midtermGrade, Finals: $finalsGrade");
     }
@@ -505,6 +507,7 @@ class _GradeInputPageState extends State<GradeInputPage> {
 
       // Show confirmation dialog for successful submission
       showDialog(
+        // ignore: use_build_context_synchronously
         context: context,
         builder: (context) => AlertDialog(
           title: const Text("Grades Submitted"),

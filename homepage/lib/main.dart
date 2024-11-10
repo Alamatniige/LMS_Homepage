@@ -20,10 +20,9 @@ class MyApp extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black),
         useMaterial3: true,
       ),
-      home: const LoginPage(), // Set LoginPage as the initial route
+      home: const LoginPage(),
       routes: {
-        '/dashboard': (context) =>
-            const DashboardScreen(), // Define the route for the dashboard
+        '/dashboard': (context) => const DashboardScreen(),
       },
     );
   }
@@ -33,6 +32,7 @@ class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _DashboardScreenState createState() => _DashboardScreenState();
 }
 

@@ -8,6 +8,7 @@ class ArchiveClassScreen extends StatefulWidget {
   const ArchiveClassScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _ArchiveClassScreenState createState() => _ArchiveClassScreenState();
 }
 

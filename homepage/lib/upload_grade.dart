@@ -9,6 +9,7 @@ class UploadGradePage extends StatefulWidget {
   const UploadGradePage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _UploadGradePageState createState() => _UploadGradePageState();
 }
 

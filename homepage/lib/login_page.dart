@@ -1,7 +1,6 @@
 import 'package:lms_homepage/forgot_password_page.dart';
 import 'package:lms_homepage/main.dart';
 import 'package:flutter/material.dart';
-import 'package:lms_homepage/verify_student_id_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -45,6 +44,9 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ],
                       ),
+                      // Add top padding to lower the form
+                      margin: const EdgeInsets.only(
+                          top: 50.0), // Adjust this value as needed
                       child: Form(
                         key: _formKey,
                         child: Column(
@@ -80,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'Please enter your Student ID';
+                                    return 'Please enter your Teacher ID';
                                   }
                                   return null;
                                 },
@@ -169,24 +171,6 @@ class _LoginPageState extends State<LoginPage> {
                             Center(
                               child: Column(
                                 children: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                const VerifyStudentIdPage()),
-                                      );
-                                    },
-                                    child: const Text(
-                                      "Don't have an account? Sign Up",
-                                      style: TextStyle(
-                                        color: Colors
-                                            .black, // Change link color to black
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
                                   TextButton(
                                     onPressed: () {
                                       Navigator.push(

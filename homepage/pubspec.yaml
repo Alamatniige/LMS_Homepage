@@ -10,6 +10,8 @@ dependencies:
   font_awesome_flutter: ^10.0.0
   http: ^0.13.6
   flutter_typeahead: ^4.0.0
+  supabase_flutter: ^2.8.0
+
 
 
 dev_dependencies:

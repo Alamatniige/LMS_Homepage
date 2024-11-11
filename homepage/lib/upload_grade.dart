@@ -6,7 +6,8 @@ import 'package:lms_homepage/main.dart';
 import 'grade_input_page.dart';
 
 class UploadGradePage extends StatefulWidget {
-  const UploadGradePage({super.key});
+  final String teacherId;
+  const UploadGradePage({super.key, required this.teacherId});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -69,7 +70,8 @@ class _UploadGradePageState extends State<UploadGradePage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const EditProfilePage(),
+                                  builder: (context) =>
+                                      const EditProfilePage(teacherId: ''),
                                 ),
                               );
                             },
@@ -102,7 +104,8 @@ class _UploadGradePageState extends State<UploadGradePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const UploadGradePage(),
+                              builder: (context) =>
+                                  const UploadGradePage(teacherId: ''),
                             ),
                           );
                         },
@@ -121,7 +124,8 @@ class _UploadGradePageState extends State<UploadGradePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ArchiveClassScreen(),
+                              builder: (context) =>
+                                  const ArchiveClassScreen(teacherId: ''),
                             ),
                           );
                         },
@@ -212,7 +216,8 @@ class _UploadGradePageState extends State<UploadGradePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const DashboardScreen(),
+                            builder: (context) =>
+                                const DashboardScreen(teacherId: ''),
                           ),
                         );
                       },
@@ -323,6 +328,6 @@ void main() {
       iconTheme: const IconThemeData(color: Colors.black),
       useMaterial3: true,
     ),
-    home: const UploadGradePage(),
+    home: const UploadGradePage(teacherId: ''),
   ));
 }

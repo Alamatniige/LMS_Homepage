@@ -4,8 +4,17 @@ import 'package:lms_homepage/edit_profile_page.dart';
 import 'package:lms_homepage/subject_page.dart';
 import 'upload_grade.dart';
 import 'package:lms_homepage/login_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://vyitxfprkpxcdjicxxvd.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5aXR4ZnBya3B4Y2RqaWN4eHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEzMTMxNjYsImV4cCI6MjA0Njg4OTE2Nn0.ubZ82j4m5aeXHHYyautAwxS0VPcx93n_D9zijZ1dtHw',
+  );
+
   runApp(const MyApp());
 }
 
@@ -22,14 +31,16 @@ class MyApp extends StatelessWidget {
       ),
       home: const LoginPage(),
       routes: {
-        '/dashboard': (context) => const DashboardScreen(),
+        '/dashboard': (context) => const DashboardScreen(teacherId: ''),
       },
     );
   }
 }
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final String teacherId;
+
+  const DashboardScreen({super.key, required this.teacherId});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -92,7 +103,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const EditProfilePage(),
+                                  builder: (context) =>
+                                      const EditProfilePage(teacherId: ''),
                                 ),
                               );
                             },
@@ -125,7 +137,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const UploadGradePage(),
+                              builder: (context) =>
+                                  const UploadGradePage(teacherId: 'teacherId'),
                             ),
                           );
                         },
@@ -144,7 +157,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ArchiveClassScreen(),
+                              builder: (context) =>
+                                  const ArchiveClassScreen(teacherId: ''),
                             ),
                           );
                         },
@@ -285,7 +299,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const SubjectPage(),
+            builder: (context) => const SubjectPage(teacherId: ''),
           ),
         );
       },
@@ -321,70 +335,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
-                trailing: PopupMenuButton(
-                  icon: const Icon(Icons.more_vert),
-                  onSelected: (value) {
-                    if (value == 'open') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SubjectPage(),
-                        ),
-                      );
-                    } else if (value == 'archive') {
-                      _showConfirmationDialog(className);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                        value: 'open', child: Text("Open Class")),
-                    const PopupMenuItem(
-                        value: 'archive', child: Text("Archive Class")),
-                  ],
-                ),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  void _showConfirmationDialog(String className) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Archive'),
-          content: Text('Are you sure you want to archive "$className"?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Implement the archive logic here if needed
-                Navigator.of(context).pop();
-              },
-              child: const Text('Yes'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('No'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void main() {
-    runApp(MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        iconTheme: const IconThemeData(color: Colors.black),
-        useMaterial3: true,
-      ),
-      home: const DashboardScreen(),
-    ));
   }
 }

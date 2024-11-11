@@ -1,6 +1,7 @@
-import 'package:lms_homepage/forgot_password_page.dart';
-import 'package:lms_homepage/main.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'forgot_password_page.dart';
+import 'main.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,9 +12,70 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _studentIdController = TextEditingController();
+  final TextEditingController _teacherIdController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {});
+
+      final supabase = Supabase.instance.client;
+      try {
+        final response = await supabase
+            .from('login')
+            .select('teacherid, password')
+            .eq('teacherid', _teacherIdController.text.trim())
+            .maybeSingle();
+        print("Teacher ID input: '${_teacherIdController.text.trim()}'");
+
+        print("Response: $response");
+
+        if (response?['password'] == _passwordController.text) {
+          Navigator.pushReplacement(
+            // Pass teacherId to the DashboardScreen
+            context,
+            MaterialPageRoute(
+              builder: (context) => DashboardScreen(
+                teacherId: _teacherIdController.text.trim(),
+              ),
+            ),
+          );
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Invalid Teacher ID or password'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } on PostgrestException catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Database error: ${error.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('An unexpected error occurred. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {});
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,22 +106,17 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ],
                       ),
-                      // Add top padding to lower the form
-                      margin: const EdgeInsets.only(
-                          top: 50.0), // Adjust this value as needed
+                      margin: const EdgeInsets.only(top: 50.0),
                       child: Form(
                         key: _formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Center(
-                              // Center the Login title
                               child: Text(
-                                'Login', // Title text
+                                'Login',
                                 style: TextStyle(
-                                    fontSize: 22, // Smaller font size
-                                    fontWeight:
-                                        FontWeight.bold), // Style for the title
+                                    fontSize: 22, fontWeight: FontWeight.bold),
                               ),
                             ),
                             const SizedBox(height: 12.0),
@@ -69,11 +126,10 @@ class _LoginPageState extends State<LoginPage> {
                                   fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 4.0),
-
                             SizedBox(
                               width: double.infinity,
                               child: TextFormField(
-                                controller: _studentIdController,
+                                controller: _teacherIdController,
                                 decoration: const InputDecoration(
                                   hintText: 'Enter your Teacher ID',
                                   border: OutlineInputBorder(),
@@ -88,17 +144,15 @@ class _LoginPageState extends State<LoginPage> {
                                 },
                               ),
                             ),
-                            const SizedBox(height: 12.0), // Reduced spacing
+                            const SizedBox(height: 12.0),
                             const Text(
                               'Password',
                               style: TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 4.0),
-                            // Wrap TextFormField with a container to limit its width
                             SizedBox(
-                              width: double
-                                  .infinity, // Use full width of the container
+                              width: double.infinity,
                               child: TextFormField(
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
@@ -106,8 +160,7 @@ class _LoginPageState extends State<LoginPage> {
                                   hintText: 'Enter your password',
                                   border: const OutlineInputBorder(),
                                   contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 8.0,
-                                      horizontal: 12.0), // Smaller padding
+                                      vertical: 8.0, horizontal: 12.0),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _obscurePassword
@@ -129,33 +182,20 @@ class _LoginPageState extends State<LoginPage> {
                                 },
                               ),
                             ),
-                            const SizedBox(height: 16.0), // Reduced spacing
+                            const SizedBox(height: 16.0),
                             Center(
                               child: SizedBox(
-                                width: 150, // Set a fixed width for the button
+                                width: 150,
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF2C9B44),
                                     padding: const EdgeInsets.symmetric(
-                                        vertical:
-                                            10.0), // Reduced button height
+                                        vertical: 10.0),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          8.0), // Rounded corners
+                                      borderRadius: BorderRadius.circular(8.0),
                                     ),
                                   ),
-                                  onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      // Simulate successful login and navigate
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const DashboardScreen(),
-                                        ),
-                                      );
-                                    }
-                                  },
+                                  onPressed: _login,
                                   child: const Text(
                                     'Submit',
                                     style: TextStyle(
@@ -166,8 +206,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ),
                             ),
-                            const SizedBox(
-                                height: 16.0), // Reduced spacing for the links
+                            const SizedBox(height: 16.0),
                             Center(
                               child: Column(
                                 children: [
@@ -183,8 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                                     child: const Text(
                                       'Forgot Password?',
                                       style: TextStyle(
-                                        color: Colors
-                                            .black, // Change link color to black
+                                        color: Colors.black,
                                         fontSize: 14,
                                       ),
                                     ),

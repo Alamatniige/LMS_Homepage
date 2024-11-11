@@ -8,7 +8,9 @@ import 'package:lms_homepage/upload_grade.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class EditProfilePage extends StatefulWidget {
-  const EditProfilePage({super.key});
+  final String teacherId; // Declare teacherId
+
+  const EditProfilePage({Key? key, required this.teacherId}) : super(key: key);
 
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
@@ -53,6 +55,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         cities = cityData.map((item) => City.fromJson(item)).toList();
       });
     } catch (e) {
+      // ignore: avoid_print
       print("Error loading data: $e");
     }
   }
@@ -142,7 +145,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const EditProfilePage(),
+                                  builder: (context) =>
+                                      const EditProfilePage(teacherId: ''),
                                 ),
                               );
                             },
@@ -175,7 +179,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const UploadGradePage(),
+                              builder: (context) =>
+                                  const UploadGradePage(teacherId: ''),
                             ),
                           );
                         },
@@ -194,7 +199,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ArchiveClassScreen(),
+                              builder: (context) =>
+                                  const ArchiveClassScreen(teacherId: ''),
                             ),
                           );
                         },
@@ -285,7 +291,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const DashboardScreen(),
+                                builder: (context) =>
+                                    const DashboardScreen(teacherId: ''),
                               ),
                             );
                           },

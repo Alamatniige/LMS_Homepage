@@ -105,7 +105,8 @@ class _GradeInputPageState extends State<GradeInputPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const EditProfilePage(),
+                                  builder: (context) =>
+                                      const EditProfilePage(teacherId: ''),
                                 ),
                               );
                             },
@@ -138,7 +139,8 @@ class _GradeInputPageState extends State<GradeInputPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const UploadGradePage(),
+                              builder: (context) =>
+                                  const UploadGradePage(teacherId: ''),
                             ),
                           );
                         },
@@ -157,7 +159,8 @@ class _GradeInputPageState extends State<GradeInputPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ArchiveClassScreen(),
+                              builder: (context) =>
+                                  const ArchiveClassScreen(teacherId: ''),
                             ),
                           );
                         },
@@ -259,7 +262,8 @@ class _GradeInputPageState extends State<GradeInputPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const DashboardScreen(),
+                                builder: (context) =>
+                                    const DashboardScreen(teacherId: ''),
                               ),
                             );
                           },

@@ -3,13 +3,15 @@ import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
 import 'package:lms_homepage/login_page.dart';
 import 'package:lms_homepage/upload_grade.dart';
-import 'subject_page.dart';
 
 class CreatePostPage extends StatefulWidget {
-  const CreatePostPage({super.key});
+  final String teacherId; // Add this line to hold the teacherId
+
+  const CreatePostPage(
+      {super.key,
+      required this.teacherId}); // Update the constructor to accept teacherId
 
   @override
-  // ignore: library_private_types_in_public_api
   _CreatePostPageState createState() => _CreatePostPageState();
 }
 
@@ -69,7 +71,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const EditProfilePage(),
+                                  builder: (context) =>
+                                      const EditProfilePage(teacherId: ''),
                                 ),
                               );
                             },
@@ -102,7 +105,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const UploadGradePage(),
+                              builder: (context) =>
+                                  const UploadGradePage(teacherId: ''),
                             ),
                           );
                         },
@@ -121,7 +125,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ArchiveClassScreen(),
+                              builder: (context) =>
+                                  const ArchiveClassScreen(teacherId: ''),
                             ),
                           );
                         },
@@ -211,11 +216,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         // Back button
                         GestureDetector(
                           onTap: () {
-                            Navigator.pop(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const SubjectPage()),
-                            );
+                            Navigator.pop(context);
                           },
                           child: const Row(
                             children: [
@@ -304,6 +305,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                           child: ElevatedButton(
                             onPressed: () {
                               // Implement publish functionality
+                              // You can use widget.teacherId here if needed
                             },
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(

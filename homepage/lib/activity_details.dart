@@ -6,7 +6,8 @@ import 'package:lms_homepage/main.dart';
 import 'package:lms_homepage/upload_grade.dart';
 
 class ActivityDetailsPage extends StatefulWidget {
-  const ActivityDetailsPage({super.key});
+  final String teacherId;
+  const ActivityDetailsPage({super.key, required this.teacherId});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -89,7 +90,8 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const EditProfilePage(),
+                                  builder: (context) =>
+                                      const EditProfilePage(teacherId: ''),
                                 ),
                               );
                             },
@@ -122,7 +124,8 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const UploadGradePage(),
+                              builder: (context) =>
+                                  const UploadGradePage(teacherId: ''),
                             ),
                           );
                         },
@@ -141,7 +144,8 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ArchiveClassScreen(),
+                              builder: (context) =>
+                                  const ArchiveClassScreen(teacherId: ''),
                             ),
                           );
                         },
@@ -235,7 +239,8 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const DashboardScreen(),
+                                builder: (context) =>
+                                    const DashboardScreen(teacherId: ''),
                               ),
                             );
                           },

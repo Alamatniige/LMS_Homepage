@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
 import 'package:lms_homepage/login_page.dart';
 import 'package:lms_homepage/main.dart';
-import 'upload_grade.dart'; // Import the UploadGradePage
+import 'upload_grade.dart';
 
 class ArchiveClassScreen extends StatefulWidget {
-  const ArchiveClassScreen({super.key});
+  final String teacherId;
+
+  const ArchiveClassScreen({super.key, required this.teacherId});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -68,7 +70,8 @@ class _ArchiveClassScreenState extends State<ArchiveClassScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const EditProfilePage(),
+                                  builder: (context) =>
+                                      const EditProfilePage(teacherId: ''),
                                 ),
                               );
                             },
@@ -101,7 +104,8 @@ class _ArchiveClassScreenState extends State<ArchiveClassScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const UploadGradePage(),
+                              builder: (context) =>
+                                  const UploadGradePage(teacherId: ''),
                             ),
                           );
                         },
@@ -197,7 +201,8 @@ class _ArchiveClassScreenState extends State<ArchiveClassScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const DashboardScreen(),
+                            builder: (context) =>
+                                const DashboardScreen(teacherId: ''),
                           ),
                         );
                       },
@@ -307,6 +312,6 @@ void main() {
       iconTheme: const IconThemeData(color: Colors.black),
       useMaterial3: true,
     ),
-    home: const ArchiveClassScreen(),
+    home: const ArchiveClassScreen(teacherId: ''),
   ));
 }

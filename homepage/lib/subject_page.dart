@@ -8,7 +8,9 @@ import 'main.dart';
 import 'upload_grade.dart';
 
 class SubjectPage extends StatefulWidget {
-  const SubjectPage({super.key});
+  final String teacherId;
+
+  const SubjectPage({super.key, required this.teacherId});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -116,7 +118,8 @@ class _SubjectPageState extends State<SubjectPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const EditProfilePage(),
+                                  builder: (context) =>
+                                      const EditProfilePage(teacherId: ''),
                                 ),
                               );
                             },
@@ -149,7 +152,8 @@ class _SubjectPageState extends State<SubjectPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const UploadGradePage(),
+                              builder: (context) =>
+                                  const UploadGradePage(teacherId: ''),
                             ),
                           );
                         },
@@ -168,7 +172,8 @@ class _SubjectPageState extends State<SubjectPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ArchiveClassScreen(),
+                              builder: (context) =>
+                                  const ArchiveClassScreen(teacherId: ''),
                             ),
                           );
                         },
@@ -302,7 +307,8 @@ class _SubjectPageState extends State<SubjectPage> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                            const DashboardScreen(),
+                                            const DashboardScreen(
+                                                teacherId: ''),
                                       ),
                                     );
                                   },
@@ -397,7 +403,8 @@ class _SubjectPageState extends State<SubjectPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const CreatePostPage(),
+                                  builder: (context) =>
+                                      const CreatePostPage(teacherId: ''),
                                 ),
                               );
                             },
@@ -437,7 +444,7 @@ class _SubjectPageState extends State<SubjectPage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      const ActivityDetailsPage(),
+                                      const ActivityDetailsPage(teacherId: ''),
                                 ),
                               );
                             },
@@ -501,7 +508,8 @@ class _SubjectPageState extends State<SubjectPage> {
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) =>
-                                                const ActivityDetailsPage(),
+                                                const ActivityDetailsPage(
+                                                    teacherId: ''),
                                           ),
                                         );
                                       },

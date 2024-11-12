@@ -6,6 +6,9 @@ import 'package:lms_homepage/edit_profile_page.dart';
 import 'package:lms_homepage/login_page.dart';
 import 'main.dart';
 import 'upload_grade.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SubjectPage extends StatefulWidget {
   final String teacherId;
@@ -118,8 +121,8 @@ class _SubjectPageState extends State<SubjectPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const EditProfilePage(teacherId: ''),
+                                  builder: (context) => EditProfilePage(
+                                      teacherId: widget.teacherId),
                                 ),
                               );
                             },
@@ -153,7 +156,7 @@ class _SubjectPageState extends State<SubjectPage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const UploadGradePage(teacherId: ''),
+                                  UploadGradePage(teacherId: widget.teacherId),
                             ),
                           );
                         },
@@ -172,8 +175,8 @@ class _SubjectPageState extends State<SubjectPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const ArchiveClassScreen(teacherId: ''),
+                              builder: (context) => ArchiveClassScreen(
+                                  teacherId: widget.teacherId),
                             ),
                           );
                         },
@@ -306,9 +309,8 @@ class _SubjectPageState extends State<SubjectPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            const DashboardScreen(
-                                                teacherId: ''),
+                                        builder: (context) => DashboardScreen(
+                                            teacherId: widget.teacherId),
                                       ),
                                     );
                                   },
@@ -403,8 +405,8 @@ class _SubjectPageState extends State<SubjectPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const CreatePostPage(teacherId: ''),
+                                  builder: (context) => CreatePostPage(
+                                      teacherId: widget.teacherId),
                                 ),
                               );
                             },
@@ -443,8 +445,8 @@ class _SubjectPageState extends State<SubjectPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const ActivityDetailsPage(teacherId: ''),
+                                  builder: (context) => ActivityDetailsPage(
+                                      teacherId: widget.teacherId),
                                 ),
                               );
                             },
@@ -508,8 +510,9 @@ class _SubjectPageState extends State<SubjectPage> {
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) =>
-                                                const ActivityDetailsPage(
-                                                    teacherId: ''),
+                                                ActivityDetailsPage(
+                                                    teacherId:
+                                                        widget.teacherId),
                                           ),
                                         );
                                       },
@@ -537,12 +540,58 @@ class _SubjectPageState extends State<SubjectPage> {
   }
 
   void _showWeekModal(BuildContext context, String week) {
-    List<Map<String, String>> modules = []; // List to hold added modules
+    List<Map<String, String>> modules = [];
+    final TextEditingController linkController = TextEditingController();
+    bool isAddingLink = false;
 
-    void addModule() {
-      setState(() {
-        modules.add({'name': 'Module ${modules.length + 1}'});
-      });
+    Future<void> insertLinkToDatabase(String link) async {
+      if (widget.teacherId.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Teacher ID is required.'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
+
+      print("Teacher ID: '${widget.teacherId}'");
+
+      int? teacherIdInt = int.tryParse(widget.teacherId);
+      if (teacherIdInt == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Invalid Teacher ID.'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
+
+      try {
+        final response = await Supabase.instance.client.from('module').insert({
+          'modulename': link,
+          'filepath': link,
+          'teacherid': teacherIdInt,
+        });
+
+        if (response != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Link uploaded successfully!'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          modules.add({'name': link}); // Add the link to the displayed list
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error uploading link: ${e.toString()}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
 
     showDialog(
@@ -564,7 +613,11 @@ class _SubjectPageState extends State<SubjectPage> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.add, color: Colors.grey),
-                    onPressed: addModule, // Add new module when clicked
+                    onPressed: () {
+                      setState(() {
+                        isAddingLink = !isAddingLink;
+                      });
+                    },
                   ),
                 ],
               ),
@@ -572,7 +625,37 @@ class _SubjectPageState extends State<SubjectPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Using a ListView builder for a dynamic list
+                    if (isAddingLink) ...[
+                      TextField(
+                        controller: linkController,
+                        decoration: InputDecoration(
+                          labelText: 'Enter Module Link',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () async {
+                          String link = linkController.text.trim();
+                          if (link.isNotEmpty) {
+                            await insertLinkToDatabase(link);
+                            setState(() {
+                              linkController.clear();
+                              isAddingLink = false; // Hide field after save
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter a valid link.'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        },
+                        child: const Text("Save Link"),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
                     for (var module in modules) ...[
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -586,8 +669,7 @@ class _SubjectPageState extends State<SubjectPage> {
                                   color: Colors.grey[300],
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Icon(Icons.insert_drive_file,
-                                    size: 30),
+                                child: const Icon(Icons.link, size: 30),
                               ),
                               const SizedBox(height: 5),
                               Text(
@@ -598,63 +680,12 @@ class _SubjectPageState extends State<SubjectPage> {
                             ],
                           ),
                           const SizedBox(width: 20),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Additional Learning Materials",
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: Image.asset(
-                                        'assets/gdrive.png', // GDrive asset
-                                        width: 30,
-                                        height: 30,
-                                      ),
-                                      onPressed: () {
-                                        // Handle Google Drive action
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: Image.asset(
-                                        'assets/yt.png', // YouTube asset
-                                        width: 30,
-                                        height: 30,
-                                      ),
-                                      onPressed: () {
-                                        // Handle YouTube action
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.link,
-                                          color: Colors.black),
-                                      iconSize: 30,
-                                      onPressed: () {
-                                        // Handle link action
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add,
-                                          color: Colors.grey),
-                                      iconSize: 30,
-                                      onPressed: () {
-                                        // Handle add new content
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
                         ],
                       ),
                       const Divider(
-                          thickness: 1,
-                          color: Colors.grey), // Separator line for modules
+                        thickness: 1,
+                        color: Colors.grey,
+                      ),
                     ],
                   ],
                 ),

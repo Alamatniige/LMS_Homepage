@@ -27,7 +27,6 @@ class _LoginPageState extends State<LoginPage> {
             .select('teacherid, password')
             .eq('teacherid', _teacherIdController.text.trim())
             .maybeSingle();
-        print("Teacher ID input: '${_teacherIdController.text.trim()}'");
 
         print("Response: $response");
 

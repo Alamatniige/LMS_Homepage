@@ -280,6 +280,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           classData['name']!,
                           classData['section']!,
                           classData['room']!,
+                          widget.teacherId,
                         );
                       },
                     ),
@@ -293,13 +294,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget classCard(String className, String section, String room) {
+  Widget classCard(
+      String className, String section, String room, String teacherId) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const SubjectPage(teacherId: ''),
+            builder: (context) =>
+                SubjectPage(teacherId: teacherId), // Pass teacherId here
           ),
         );
       },

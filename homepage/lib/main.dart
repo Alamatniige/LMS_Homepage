@@ -48,8 +48,10 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  bool isSidebarExpanded = false;
-  bool isHovering = false; // For hover effect on Edit Profile
+  bool isHovering = false;
+  bool isHoveringUpload = false;
+  bool isHoveringArchive = false;
+  bool isHoveringLogout = false;
 
   @override
   Widget build(BuildContext context) {
@@ -57,142 +59,170 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: Row(
         children: [
           // Sidebar
-          MouseRegion(
-            onEnter: (_) {
-              setState(() {
-                isSidebarExpanded = true;
-              });
-            },
-            onExit: (_) {
-              setState(() {
-                isSidebarExpanded = false;
-              });
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: isSidebarExpanded ? 200 : 70,
-              color: isSidebarExpanded
-                  ? const Color.fromARGB(255, 44, 155, 68)
-                  : Colors.green[100],
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      // Profile Picture
-                      CircleAvatar(
-                        radius: isSidebarExpanded ? 30 : 20,
-                        backgroundImage: const AssetImage('assets/aliceg.jpg'),
-                      ),
-                      if (isSidebarExpanded) const SizedBox(height: 10),
-                      if (isSidebarExpanded)
-                        MouseRegion(
-                          onEnter: (_) {
-                            setState(() {
-                              isHovering = true;
-                            });
-                          },
-                          onExit: (_) {
-                            setState(() {
-                              isHovering = false;
-                            });
-                          },
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const EditProfilePage(teacherId: ''),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 16,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isHovering
-                                    ? const Color.fromRGBO(44, 155, 68, 1)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                "Edit Profile",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 20),
-
-                      // Upload Grades Button
-                      GestureDetector(
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: 70, // Fixed width for the sidebar
+            color: const Color.fromARGB(
+                255, 44, 155, 68), // Fixed color for the sidebar
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    // Profile Picture with GestureDetector for navigation
+                    Tooltip(
+                      message: 'Edit Profile',
+                      child: GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const UploadGradePage(teacherId: 'teacherId'),
+                                  const EditProfilePage(teacherId: ''),
                             ),
                           );
                         },
-                        child: Column(
-                          children: [
-                            const Icon(Icons.upload, size: 40),
-                            if (isSidebarExpanded) const Text("Upload Grades"),
-                          ],
+                        child: const CircleAvatar(
+                          radius: 25,
+                          backgroundImage: AssetImage('assets/aliceg.jpg'),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                    ),
+                    const SizedBox(height: 20),
 
-                      // Archive Courses Button
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const ArchiveClassScreen(teacherId: ''),
-                            ),
-                          );
-                        },
-                        child: Column(
-                          children: [
-                            const Icon(Icons.archive, size: 40),
-                            if (isSidebarExpanded)
-                              const Text("Archive Courses"),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginPage(),
-                          ),
-                        );
+                    // Upload Grades Button
+                    MouseRegion(
+                      onEnter: (_) {
+                        setState(() {
+                          isHoveringUpload = true;
+                        });
                       },
-                      child: Column(
-                        children: [
-                          const Icon(Icons.logout, size: 40),
-                          if (isSidebarExpanded) const Text("Log Out"),
-                        ],
+                      onExit: (_) {
+                        setState(() {
+                          isHoveringUpload = false;
+                        });
+                      },
+                      child: Tooltip(
+                        message: 'Upload Grades',
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const UploadGradePage(
+                                    teacherId: 'teacherId'),
+                              ),
+                            );
+                          },
+                          child: Icon(
+                            Icons.upload,
+                            size: 40,
+                            color: isHoveringUpload
+                                ? const Color.fromARGB(255, 255, 255, 255)
+                                : const Color.fromARGB(255, 0, 0, 0),
+                            shadows: isHoveringUpload
+                                ? [
+                                    BoxShadow(
+                                        color: const Color.fromARGB(
+                                            255, 69, 238, 106),
+                                        blurRadius: 10)
+                                  ]
+                                : [],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Archive Courses Button
+                    MouseRegion(
+                      onEnter: (_) {
+                        setState(() {
+                          isHoveringArchive = true;
+                        });
+                      },
+                      onExit: (_) {
+                        setState(() {
+                          isHoveringArchive = false;
+                        });
+                      },
+                      child: Tooltip(
+                        message: 'Archive Courses',
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ArchiveClassScreen(teacherId: ''),
+                              ),
+                            );
+                          },
+                          child: Icon(
+                            Icons.archive,
+                            size: 40,
+                            color: isHoveringArchive
+                                ? const Color.fromARGB(255, 255, 255, 255)
+                                : const Color.fromARGB(255, 0, 0, 0),
+                            shadows: isHoveringArchive
+                                ? [
+                                    BoxShadow(
+                                        color: const Color.fromARGB(
+                                            255, 69, 238, 106),
+                                        blurRadius: 10)
+                                  ]
+                                : [],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: MouseRegion(
+                    onEnter: (_) {
+                      setState(() {
+                        isHoveringLogout = true;
+                      });
+                    },
+                    onExit: (_) {
+                      setState(() {
+                        isHoveringLogout = false;
+                      });
+                    },
+                    child: Tooltip(
+                      message: 'Log Out',
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
+                            ),
+                          );
+                        },
+                        child: Icon(
+                          Icons.logout,
+                          size: 40,
+                          color: isHoveringLogout
+                              ? Colors.white
+                              : const Color.fromARGB(255, 0, 0, 0),
+                          shadows: isHoveringLogout
+                              ? [
+                                  BoxShadow(
+                                      color: const Color.fromARGB(
+                                          255, 69, 238, 106),
+                                      blurRadius: 10)
+                                ]
+                              : [],
+                        ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
 

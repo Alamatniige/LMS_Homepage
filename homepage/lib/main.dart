@@ -66,11 +66,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           .eq('id', widget.teacherId)
           .single();
 
-      if (teacherData['course_id'] == null) {
-        print("Course ID is not found for teacher.");
-        return;
-      }
-
       final teacherCourseId = teacherData['course_id'];
 
       final courseData = await Supabase.instance.client
@@ -87,11 +82,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final courseName = courseData['name'];
 
       // Step 3: Fetch sections related to the teacher's course_id
-      final data = await Supabase.instance.client
-          .from('section')
-          .select(
-              'name, year_number, college_program(name, college_department(name))')
-          .eq('course_id', teacherCourseId); // Assuming section has 'course_id'
+      final data = await Supabase.instance.client.from('section').select(
+          'name, year_number, college_program(name, college_department(name))');
 
       if (data.isEmpty) {
         print("No sections found for course_id: $teacherCourseId");
@@ -112,7 +104,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }).toList();
       });
     } catch (e) {
-      // Handle any errors that occur during the fetch
       print('Error fetching class data: $e');
     }
   }
@@ -344,18 +335,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         crossAxisSpacing: 20,
                         mainAxisSpacing: 20,
                       ),
-                      itemCount:
-                          classDataList.length, // Use fetched data length
+                      itemCount: classDataList.length,
                       itemBuilder: (context, index) {
                         final classData = classDataList[index];
 
                         return classCard(
-                          classData['class_name']!, // Pass class name
-                          classData['year_number']!, // Pass year number
-                          classData['program_name']!, // Pass program name
+                          classData['class_name']!,
+                          classData['year_number']!,
+                          classData['program_name']!,
+                          classData['course_name']!,
                           classData['department_name']!,
-                          classData['course_name']!, // Pass department name
-                          widget.teacherId, // Pass teacherId
+                          widget.teacherId,
                         );
                       },
                     ),
@@ -398,21 +388,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   radius: 40,
                   backgroundImage: AssetImage('assets/ccst.jpg'),
                 ),
-                title: Text(
-                  departmentName, // Display department name
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-                subtitle: Column(
+                title: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Text(
-                      courseName,
-                      style: const TextStyle(fontSize: 10),
+                      departmentName, // Display department name
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                     Text(
-                      "$programName $yearNumber $className",
+                      programName, // Display course name
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      courseName, // Display course name
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "$yearNumber$className", // Display year number and class name
                       style: const TextStyle(fontSize: 10),
                     ),
                   ],

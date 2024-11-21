@@ -42,6 +42,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void initState() {
     super.initState();
     loadData();
+    print("dashboard is initialized with the ID: ${widget.teacherId}");
   }
 
   // Load the JSON data from assets

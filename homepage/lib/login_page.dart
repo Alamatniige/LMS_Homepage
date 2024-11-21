@@ -12,7 +12,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _teacherIdController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
@@ -22,29 +22,51 @@ class _LoginPageState extends State<LoginPage> {
 
       final supabase = Supabase.instance.client;
       try {
+        // Print the email being queried
+        final email = _emailController.text.trim();
+        print("Querying for email: $email");
+
+        // Query the database for a teacher with the specified email
         final response = await supabase
-            .from('login')
-            .select('teacherid, password')
-            .eq('teacherid', _teacherIdController.text.trim())
+            .from('teacher')
+            .select('id, email, password')
+            .eq('email', email)
             .maybeSingle();
 
+        // Log the response
         print("Response: $response");
 
-        if (response?['password'] == _passwordController.text) {
-          Navigator.pushReplacement(
-            // Pass teacherId to the DashboardScreen
-            context,
-            MaterialPageRoute(
-              builder: (context) => DashboardScreen(
-                teacherId: _teacherIdController.text.trim(),
+        // Check if a record was found and if the passwords match
+        if (response != null &&
+            response['password'] == _passwordController.text) {
+          // Retrieve the teacher's ID
+          final teacherId = response['id'].toString();
+          print("Teacher ID: $teacherId"); // Debug log for teacherId
+
+          // Ensure teacherId is not null or empty before navigating
+          if (teacherId.isNotEmpty) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DashboardScreen(
+                  teacherId: teacherId,
+                ),
               ),
-            ),
-          );
+            );
+          } else {
+            // Handle invalid teacherId scenario
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Invalid teacher ID.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Invalid Teacher ID or password'),
+                content: Text('Invalid email or password'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -120,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: 12.0),
                             const Text(
-                              'Teacher ID',
+                              'Email',
                               style: TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.bold),
                             ),
@@ -128,16 +150,16 @@ class _LoginPageState extends State<LoginPage> {
                             SizedBox(
                               width: double.infinity,
                               child: TextFormField(
-                                controller: _teacherIdController,
+                                controller: _emailController,
                                 decoration: const InputDecoration(
-                                  hintText: 'Enter your Teacher ID',
+                                  hintText: 'Enter your Email',
                                   border: OutlineInputBorder(),
                                   contentPadding: EdgeInsets.symmetric(
                                       vertical: 8.0, horizontal: 12.0),
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'Please enter your Teacher ID';
+                                    return 'Please enter your Email';
                                   }
                                   return null;
                                 },

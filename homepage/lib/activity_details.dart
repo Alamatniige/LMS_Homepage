@@ -7,7 +7,14 @@ import 'package:lms_homepage/upload_grade.dart';
 
 class ActivityDetailsPage extends StatefulWidget {
   final String teacherId;
-  const ActivityDetailsPage({super.key, required this.teacherId});
+  final String className;
+  final String section;
+
+  const ActivityDetailsPage(
+      {super.key,
+      required this.teacherId,
+      required this.className,
+      required this.section});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -271,8 +278,13 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    SubjectPage(teacherId: widget.teacherId),
+                                builder: (context) => SubjectPage(
+                                  teacherId: widget.teacherId,
+                                  className: widget
+                                      .className, // Pass the className from widget
+                                  section: widget
+                                      .section, // Pass the section from widget
+                                ),
                               ),
                             );
                           },

@@ -6,11 +6,16 @@ import 'package:lms_homepage/subject_page.dart';
 import 'package:lms_homepage/upload_grade.dart';
 
 class CreatePostPage extends StatefulWidget {
-  final String teacherId; // Add this line to hold the teacherId
+  final String teacherId;
+  final String className;
+  final String section;
 
-  const CreatePostPage(
-      {super.key,
-      required this.teacherId}); // Update the constructor to accept teacherId
+  const CreatePostPage({
+    super.key,
+    required this.teacherId,
+    required this.className,
+    required this.section,
+  }); // Update the constructor to accept teacherId
 
   @override
   _CreatePostPageState createState() => _CreatePostPageState();
@@ -251,8 +256,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    SubjectPage(teacherId: widget.teacherId),
+                                builder: (context) => SubjectPage(
+                                  teacherId: widget.teacherId,
+                                  className: widget
+                                      .className, // Pass the className from widget
+                                  section: widget.section,
+                                ),
                               ),
                             );
                           },

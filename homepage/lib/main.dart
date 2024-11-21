@@ -10,9 +10,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-    url: 'https://vyitxfprkpxcdjicxxvd.supabase.co',
+    url: 'https://eqaqizznngarxghlrpul.supabase.co',
     anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5aXR4ZnBya3B4Y2RqaWN4eHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEzMTMxNjYsImV4cCI6MjA0Njg4OTE2Nn0.ubZ82j4m5aeXHHYyautAwxS0VPcx93n_D9zijZ1dtHw',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxYXFpenpubmdhcnhnaGxycHVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAyODk5MzgsImV4cCI6MjA0NTg2NTkzOH0.gCKoYLBnY0em8c0WnaWFCdukjgMvWiOmZgGzIstb8Kk',
   );
 
   runApp(const MyApp());
@@ -24,16 +24,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        iconTheme: const IconThemeData(color: Colors.black),
-        useMaterial3: true,
-      ),
-      home: const LoginPage(),
-      routes: {
-        '/dashboard': (context) => const DashboardScreen(teacherId: ''),
-      },
-    );
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          iconTheme: const IconThemeData(color: Colors.black),
+          useMaterial3: true,
+        ),
+        home: const LoginPage());
   }
 }
 
@@ -52,6 +48,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isHoveringUpload = false;
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
+
+  List<Map<String, dynamic>> classDataList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    print("dashboard is initialized with the ID: ${widget.teacherId}");
+    fetchClassData();
+  }
+
+  Future<void> fetchClassData() async {
+    try {
+      final teacherData = await Supabase.instance.client
+          .from('teacher')
+          .select('course_id')
+          .eq('id', widget.teacherId)
+          .single();
+
+      if (teacherData['course_id'] == null) {
+        print("Course ID is not found for teacher.");
+        return;
+      }
+
+      final teacherCourseId = teacherData['course_id'];
+
+      final courseData = await Supabase.instance.client
+          .from('college_course')
+          .select('name')
+          .eq('id', teacherCourseId)
+          .single();
+
+      if (courseData['name'] == null) {
+        print("Course not found.");
+        return;
+      }
+
+      final courseName = courseData['name'];
+
+      // Step 3: Fetch sections related to the teacher's course_id
+      final data = await Supabase.instance.client
+          .from('section')
+          .select(
+              'name, year_number, college_program(name, college_department(name))')
+          .eq('course_id', teacherCourseId); // Assuming section has 'course_id'
+
+      if (data.isEmpty) {
+        print("No sections found for course_id: $teacherCourseId");
+        return;
+      }
+
+      // Step 4: Process the data
+      setState(() {
+        classDataList = data.map((item) {
+          return {
+            'class_name': item['name'],
+            'year_number': item['year_number'],
+            'program_name': item['college_program']['name'],
+            'department_name': item['college_program']['college_department']
+                ['name'],
+            'course_name': courseName, // Add course name to the class data
+          };
+        }).toList();
+      });
+    } catch (e) {
+      // Handle any errors that occur during the fetch
+      print('Error fetching class data: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,9 +187,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 : const Color.fromARGB(255, 0, 0, 0),
                             shadows: isHoveringUpload
                                 ? [
-                                    BoxShadow(
-                                        color: const Color.fromARGB(
-                                            255, 69, 238, 106),
+                                    const BoxShadow(
+                                        color:
+                                            Color.fromARGB(255, 69, 238, 106),
                                         blurRadius: 10)
                                   ]
                                 : [],
@@ -167,9 +231,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 : const Color.fromARGB(255, 0, 0, 0),
                             shadows: isHoveringArchive
                                 ? [
-                                    BoxShadow(
-                                        color: const Color.fromARGB(
-                                            255, 69, 238, 106),
+                                    const BoxShadow(
+                                        color:
+                                            Color.fromARGB(255, 69, 238, 106),
                                         blurRadius: 10)
                                   ]
                                 : [],
@@ -211,9 +275,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               : const Color.fromARGB(255, 0, 0, 0),
                           shadows: isHoveringLogout
                               ? [
-                                  BoxShadow(
-                                      color: const Color.fromARGB(
-                                          255, 69, 238, 106),
+                                  const BoxShadow(
+                                      color: Color.fromARGB(255, 69, 238, 106),
                                       blurRadius: 10)
                                 ]
                               : [],
@@ -281,36 +344,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         crossAxisSpacing: 20,
                         mainAxisSpacing: 20,
                       ),
-                      itemCount: 4,
+                      itemCount:
+                          classDataList.length, // Use fetched data length
                       itemBuilder: (context, index) {
-                        final classData = [
-                          {
-                            "name": "Data Structure and Algorithm",
-                            "section": "BSIT - 2C",
-                            "room": "203"
-                          },
-                          {
-                            "name": "Project Management",
-                            "section": "BSIT - 3D",
-                            "room": "203"
-                          },
-                          {
-                            "name": "Living in IT Era",
-                            "section": "BSIT - 1A",
-                            "room": "210"
-                          },
-                          {
-                            "name": "Introduction to Computing",
-                            "section": "BSIT - 1D",
-                            "room": "207"
-                          }
-                        ][index];
+                        final classData = classDataList[index];
 
                         return classCard(
-                          classData['name']!,
-                          classData['section']!,
-                          classData['room']!,
-                          widget.teacherId,
+                          classData['class_name']!, // Pass class name
+                          classData['year_number']!, // Pass year number
+                          classData['program_name']!, // Pass program name
+                          classData['department_name']!,
+                          classData['course_name']!, // Pass department name
+                          widget.teacherId, // Pass teacherId
                         );
                       },
                     ),
@@ -324,15 +369,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget classCard(
-      String className, String section, String room, String teacherId) {
+  Widget classCard(String className, String yearNumber, String courseName,
+      String programName, String departmentName, String teacherId) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                SubjectPage(teacherId: teacherId), // Pass teacherId here
+            builder: (context) => SubjectPage(
+              teacherId: teacherId,
+              className: className,
+              section: yearNumber,
+            ),
           ),
         );
       },
@@ -350,20 +398,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   radius: 40,
                   backgroundImage: AssetImage('assets/ccst.jpg'),
                 ),
-                title: const Text(
-                  "College of Computer Studies and Technology",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                title: Text(
+                  departmentName, // Display department name
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 12),
                 ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 12),
                     Text(
-                      className,
+                      courseName,
                       style: const TextStyle(fontSize: 10),
                     ),
                     Text(
-                      "$section\nRoom $room",
+                      "$programName $yearNumber $className",
                       style: const TextStyle(fontSize: 10),
                     ),
                   ],

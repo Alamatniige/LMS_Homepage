@@ -10,8 +10,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SubjectPage extends StatefulWidget {
   final String teacherId;
+  final String className;
+  final String section;
 
-  const SubjectPage({super.key, required this.teacherId});
+  const SubjectPage({
+    super.key,
+    required this.teacherId,
+    required this.className,
+    required this.section,
+  });
 
   @override
   // ignore: library_private_types_in_public_api
@@ -401,7 +408,11 @@ class _SubjectPageState extends State<SubjectPage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => CreatePostPage(
-                                      teacherId: widget.teacherId),
+                                    teacherId: widget.teacherId,
+                                    className: widget
+                                        .className, // Pass the className from widget
+                                    section: widget.section,
+                                  ),
                                 ),
                               );
                             },
@@ -440,7 +451,12 @@ class _SubjectPageState extends State<SubjectPage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => ActivityDetailsPage(
-                                      teacherId: widget.teacherId),
+                                    teacherId: widget.teacherId,
+                                    className: widget
+                                        .className, // Pass the className from widget
+                                    section: widget
+                                        .section, // Pass the section from widget
+                                  ),
                                 ),
                               );
                             },
@@ -504,8 +520,12 @@ class _SubjectPageState extends State<SubjectPage> {
                                           MaterialPageRoute(
                                             builder: (context) =>
                                                 ActivityDetailsPage(
-                                                    teacherId:
-                                                        widget.teacherId),
+                                              teacherId: widget.teacherId,
+                                              className: widget
+                                                  .className, // Pass the className from widget
+                                              section: widget
+                                                  .section, // Pass the section from widget
+                                            ),
                                           ),
                                         );
                                       },

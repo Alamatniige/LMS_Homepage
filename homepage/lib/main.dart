@@ -3,17 +3,110 @@ import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
 import 'package:lms_homepage/subject_page.dart';
 import 'upload_grade.dart';
+import 'package:lms_homepage/login_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://eqaqizznngarxghlrpul.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxYXFpenpubmdhcnhnaGxycHVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAyODk5MzgsImV4cCI6MjA0NTg2NTkzOH0.gCKoYLBnY0em8c0WnaWFCdukjgMvWiOmZgGzIstb8Kk',
+  );
+
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          iconTheme: const IconThemeData(color: Colors.black),
+          useMaterial3: true,
+        ),
+        home: const LoginPage());
+  }
+}
+
+class DashboardScreen extends StatefulWidget {
+  final String teacherId;
+
+  const DashboardScreen({super.key, required this.teacherId});
+
+  @override
+  // ignore: library_private_types_in_public_api
   _DashboardScreenState createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  bool isSidebarExpanded = false;
-  bool isHovering = false; // For hover effect on Edit Profile
+  bool isHovering = false;
+  bool isHoveringUpload = false;
+  bool isHoveringArchive = false;
+  bool isHoveringLogout = false;
+
+  List<Map<String, dynamic>> classDataList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    print("dashboard is initialized with the ID: ${widget.teacherId}");
+    fetchClassData();
+  }
+
+  Future<void> fetchClassData() async {
+    try {
+      final teacherData = await Supabase.instance.client
+          .from('teacher')
+          .select('course_id')
+          .eq('id', widget.teacherId)
+          .single();
+
+      final teacherCourseId = teacherData['course_id'];
+
+      final courseData = await Supabase.instance.client
+          .from('college_course')
+          .select('name')
+          .eq('id', teacherCourseId)
+          .single();
+
+      if (courseData['name'] == null) {
+        print("Course not found.");
+        return;
+      }
+
+      final courseName = courseData['name'];
+
+      // Step 3: Fetch sections related to the teacher's course_id
+      final data = await Supabase.instance.client.from('section').select(
+          'name, year_number, college_program(name, college_department(name))');
+
+      if (data.isEmpty) {
+        print("No sections found for course_id: $teacherCourseId");
+        return;
+      }
+
+      // Step 4: Process the data
+      setState(() {
+        classDataList = data.map((item) {
+          return {
+            'class_name': item['name'],
+            'year_number': item['year_number'],
+            'program_name': item['college_program']['name'],
+            'department_name': item['college_program']['college_department']
+                ['name'],
+            'course_name': courseName, // Add course name to the class data
+          };
+        }).toList();
+      });
+    } catch (e) {
+      print('Error fetching class data: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,129 +114,169 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: Row(
         children: [
           // Sidebar
-          MouseRegion(
-            onEnter: (_) {
-              setState(() {
-                isSidebarExpanded = true;
-              });
-            },
-            onExit: (_) {
-              setState(() {
-                isSidebarExpanded = false;
-              });
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: isSidebarExpanded ? 200 : 70,
-              color: isSidebarExpanded
-                  ? const Color.fromARGB(255, 44, 155, 68)
-                  : Colors.green[100],
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      // Profile Picture
-                      CircleAvatar(
-                        radius: isSidebarExpanded ? 30 : 20,
-                        backgroundImage: const AssetImage('assets/aliceg.jpg'),
-                      ),
-                      if (isSidebarExpanded) const SizedBox(height: 10),
-                      if (isSidebarExpanded)
-                        MouseRegion(
-                          onEnter: (_) {
-                            setState(() {
-                              isHovering = true;
-                            });
-                          },
-                          onExit: (_) {
-                            setState(() {
-                              isHovering = false;
-                            });
-                          },
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const EditProfilePage(),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 16,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isHovering
-                                    ? const Color.fromRGBO(44, 155, 68, 1)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                "Edit Profile",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                ),
-                              ),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: 70, // Fixed width for the sidebar
+            color: const Color.fromARGB(
+                255, 44, 155, 68), // Fixed color for the sidebar
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    // Profile Picture with GestureDetector for navigation
+                    Tooltip(
+                      message: 'Edit Profile',
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const EditProfilePage(teacherId: ''),
                             ),
+                          );
+                        },
+                        child: const CircleAvatar(
+                          radius: 25,
+                          backgroundImage: AssetImage('assets/aliceg.jpg'),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Upload Grades Button
+                    MouseRegion(
+                      onEnter: (_) {
+                        setState(() {
+                          isHoveringUpload = true;
+                        });
+                      },
+                      onExit: (_) {
+                        setState(() {
+                          isHoveringUpload = false;
+                        });
+                      },
+                      child: Tooltip(
+                        message: 'Upload Grades',
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const UploadGradePage(
+                                    teacherId: 'teacherId'),
+                              ),
+                            );
+                          },
+                          child: Icon(
+                            Icons.upload,
+                            size: 40,
+                            color: isHoveringUpload
+                                ? const Color.fromARGB(255, 255, 255, 255)
+                                : const Color.fromARGB(255, 0, 0, 0),
+                            shadows: isHoveringUpload
+                                ? [
+                                    const BoxShadow(
+                                        color:
+                                            Color.fromARGB(255, 69, 238, 106),
+                                        blurRadius: 10)
+                                  ]
+                                : [],
                           ),
                         ),
-                      const SizedBox(height: 20),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
 
-                      // Upload Grades Button
-                      GestureDetector(
+                    // Archive Courses Button
+                    MouseRegion(
+                      onEnter: (_) {
+                        setState(() {
+                          isHoveringArchive = true;
+                        });
+                      },
+                      onExit: (_) {
+                        setState(() {
+                          isHoveringArchive = false;
+                        });
+                      },
+                      child: Tooltip(
+                        message: 'Archive Courses',
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ArchiveClassScreen(teacherId: ''),
+                              ),
+                            );
+                          },
+                          child: Icon(
+                            Icons.archive,
+                            size: 40,
+                            color: isHoveringArchive
+                                ? const Color.fromARGB(255, 255, 255, 255)
+                                : const Color.fromARGB(255, 0, 0, 0),
+                            shadows: isHoveringArchive
+                                ? [
+                                    const BoxShadow(
+                                        color:
+                                            Color.fromARGB(255, 69, 238, 106),
+                                        blurRadius: 10)
+                                  ]
+                                : [],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: MouseRegion(
+                    onEnter: (_) {
+                      setState(() {
+                        isHoveringLogout = true;
+                      });
+                    },
+                    onExit: (_) {
+                      setState(() {
+                        isHoveringLogout = false;
+                      });
+                    },
+                    child: Tooltip(
+                      message: 'Log Out',
+                      child: GestureDetector(
                         onTap: () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const UploadGradePage(),
+                              builder: (context) => const LoginPage(),
                             ),
                           );
                         },
-                        child: Column(
-                          children: [
-                            const Icon(Icons.upload, size: 40),
-                            if (isSidebarExpanded) const Text("Upload Grades"),
-                          ],
+                        child: Icon(
+                          Icons.logout,
+                          size: 40,
+                          color: isHoveringLogout
+                              ? Colors.white
+                              : const Color.fromARGB(255, 0, 0, 0),
+                          shadows: isHoveringLogout
+                              ? [
+                                  const BoxShadow(
+                                      color: Color.fromARGB(255, 69, 238, 106),
+                                      blurRadius: 10)
+                                ]
+                              : [],
                         ),
                       ),
-                      const SizedBox(height: 20),
-
-                      // Archive Courses Button
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ArchiveClassScreen(),
-                            ),
-                          );
-                        },
-                        child: Column(
-                          children: [
-                            const Icon(Icons.archive, size: 40),
-                            if (isSidebarExpanded)
-                              const Text("Archive Courses"),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      children: [
-                        const Icon(Icons.logout, size: 40),
-                        if (isSidebarExpanded) const Text("Log Out"),
-                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
 
@@ -202,33 +335,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         crossAxisSpacing: 20,
                         mainAxisSpacing: 20,
                       ),
-                      itemCount: 4,
+                      itemCount: classDataList.length,
                       itemBuilder: (context, index) {
-                        final classData = [
-                          {
-                            "name": "Data Structure and Algorithm",
-                            "section": "BSIT - 2C",
-                            "room": "203"
-                          },
-                          {
-                            "name": "Project Management",
-                            "section": "BSIT - 3D",
-                            "room": "203"
-                          },
-                          {
-                            "name": "Living in IT Era",
-                            "section": "BSIT - 1A",
-                            "room": "210"
-                          },
-                          {
-                            "name": "Introduction to Computing",
-                            "section": "BSIT - 1D",
-                            "room": "207"
-                          }
-                        ][index];
+                        final classData = classDataList[index];
 
-                        return classCard(classData['name']!,
-                            classData['section']!, classData['room']!);
+                        return classCard(
+                          classData['class_name']!,
+                          classData['year_number']!,
+                          classData['program_name']!,
+                          classData['course_name']!,
+                          classData['department_name']!,
+                          widget.teacherId,
+                        );
                       },
                     ),
                   ),
@@ -241,13 +359,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget classCard(String className, String section, String room) {
+  Widget classCard(String className, String yearNumber, String courseName,
+      String programName, String departmentName, String teacherId) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const SubjectPage(),
+            builder: (context) => SubjectPage(
+              teacherId: teacherId,
+              className: className,
+              section: yearNumber,
+            ),
           ),
         );
       },
@@ -265,43 +388,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   radius: 40,
                   backgroundImage: AssetImage('assets/ccst.jpg'),
                 ),
-                title: const Text(
-                  "College of Computer Studies and Technology",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-                subtitle: Column(
+                title: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Text(
-                      className,
-                      style: const TextStyle(fontSize: 10),
+                      departmentName, // Display department name
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                     Text(
-                      "$section\nRoom $room",
+                      programName, // Display course name
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      courseName, // Display course name
                       style: const TextStyle(fontSize: 10),
                     ),
-                  ],
-                ),
-                trailing: PopupMenuButton(
-                  icon: const Icon(Icons.more_vert),
-                  onSelected: (value) {
-                    if (value == 'open') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SubjectPage(),
-                        ),
-                      );
-                    } else if (value == 'archive') {
-                      _showConfirmationDialog(className);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                        value: 'open', child: Text("Open Class")),
-                    const PopupMenuItem(
-                        value: 'archive', child: Text("Archive Class")),
+                    const SizedBox(height: 4),
+                    Text(
+                      "$yearNumber$className", // Display year number and class name
+                      style: const TextStyle(fontSize: 10),
+                    ),
                   ],
                 ),
               ),
@@ -311,41 +420,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
-  void _showConfirmationDialog(String className) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Archive'),
-          content: Text('Are you sure you want to archive "$className"?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Yes'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('No'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      iconTheme: const IconThemeData(color: Colors.black),
-      useMaterial3: true,
-    ),
-    home: const DashboardScreen(),
-  ));
 }

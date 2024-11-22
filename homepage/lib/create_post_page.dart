@@ -9,15 +9,24 @@ class CreatePostPage extends StatefulWidget {
   final String teacherId;
   final String className;
   final String section;
+  final String courseName;
+  final String programName;
+  final String departmentName;
+  final String yearNumber;
 
   const CreatePostPage({
     super.key,
     required this.teacherId,
     required this.className,
     required this.section,
+    required this.courseName,
+    required this.programName,
+    required this.departmentName,
+    required this.yearNumber,
   }); // Update the constructor to accept teacherId
 
   @override
+  // ignore: library_private_types_in_public_api
   _CreatePostPageState createState() => _CreatePostPageState();
 }
 
@@ -213,37 +222,47 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       mainAxisAlignment:
                           MainAxisAlignment.spaceBetween, // Space out the items
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment
                                 .center, // Center logo and text
                             children: [
-                              CircleAvatar(
+                              const CircleAvatar(
                                 radius: 26,
                                 backgroundImage: AssetImage('assets/ccst.jpg'),
                               ),
-                              SizedBox(width: 20),
+                              const SizedBox(width: 20),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment
                                     .center, // Center the text
                                 children: [
                                   Text(
-                                    "College of Computer Studies and Technology",
+                                    widget.departmentName,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
+                                      height:
+                                          1.0, // Adjust this value to reduce spacing
                                     ),
                                   ),
                                   Text(
-                                    "CC214 - Data Structure and Algorithm",
+                                    widget.programName,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 12),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      height:
+                                          0.1, // Adjust this value to reduce spacing
+                                    ),
                                   ),
                                   Text(
-                                    "BSIT - 2C",
+                                    '${widget.courseName} ${widget.yearNumber}-${widget.className}',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 12),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      height:
+                                          2.0, // Adjust this value to reduce spacing
+                                    ),
                                   ),
                                 ],
                               ),
@@ -257,11 +276,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => SubjectPage(
-                                  teacherId: widget.teacherId,
-                                  className: widget
-                                      .className, // Pass the className from widget
-                                  section: widget.section,
-                                ),
+                                    teacherId: widget.teacherId,
+                                    className: widget.className,
+                                    section: widget.section,
+                                    courseName: widget.courseName,
+                                    programName: widget.programName,
+                                    departmentName: widget.departmentName,
+                                    yearNumber: widget.yearNumber),
                               ),
                             );
                           },

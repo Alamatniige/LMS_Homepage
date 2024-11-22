@@ -13,6 +13,7 @@ class EditProfilePage extends StatefulWidget {
   const EditProfilePage({Key? key, required this.teacherId}) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _EditProfilePageState createState() => _EditProfilePageState();
 }
 
@@ -42,6 +43,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void initState() {
     super.initState();
     loadData();
+    // ignore: avoid_print
     print("dashboard is initialized with the ID: ${widget.teacherId}");
   }
 

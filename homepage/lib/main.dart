@@ -62,44 +62,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> fetchClassData() async {
     try {
-      final teacherData = await Supabase.instance.client
-          .from('teacher')
+      // Fetch the teacher's course IDs
+      final teacherCourses = await Supabase.instance.client
+          .from('teacher_courses')
           .select('course_id')
-          .eq('id', widget.teacherId)
-          .single();
+          .eq('teacher_id', widget.teacherId);
 
-      final teacherCourseId = teacherData['course_id'];
-
-      final courseData = await Supabase.instance.client
-          .from('college_course')
-          .select('name, year_number, semester')
-          .eq('id', teacherCourseId)
-          .single();
-
-      if (courseData['name'] == null) {
-        print("Course not found.");
+      if (teacherCourses.isEmpty) {
+        print('No course found for the teacher.');
         return;
       }
 
-      final courseName = courseData['name'];
-      final courseYearNumber = courseData['year_number'];
-      final courseSemester = courseData['semester'];
+      // List to store all filtered class data
+      List<Map<String, dynamic>> allFilteredData = [];
 
-      print(
-          "Course Year Number: $courseYearNumber, Course Semester: $courseSemester");
+      // Loop through all courses associated with the teacher
+      for (var course in teacherCourses) {
+        final teacherCourseId = course['course_id'];
 
-      final data = await Supabase.instance.client.from('section').select(
-          'name, year_number, semester, college_program(name, college_department(name))');
+        // Fetch course details for each course
+        final courseData = await Supabase.instance.client
+            .from('college_course')
+            .select('name, year_number, semester')
+            .eq('id', teacherCourseId)
+            .single();
 
-      if (data.isEmpty) {
-        print("No sections found for course_id: $teacherCourseId");
-        return;
-      }
+        if (courseData['name'] == null) {
+          print("Course not found for course_id: $teacherCourseId.");
+          continue; // Skip if course not found
+        }
 
-      setState(() {
-        classDataList = data.where((item) {
-          print(
-              "Section Year Number: ${item['year_number']}, Section Semester: ${item['semester']}");
+        final courseName = courseData['name'];
+        final courseYearNumber = courseData['year_number'];
+        final courseSemester = courseData['semester'];
+
+        // Fetch sections associated with the course
+        final data = await Supabase.instance.client.from('section').select(
+            'name, year_number, semester, college_program(name, college_department(name))');
+
+        if (data.isEmpty) {
+          print("No sections found for course_id: $teacherCourseId");
+          continue; // Skip if no sections are found
+        }
+
+        // Filter sections based on course details
+        final filteredData = data.where((item) {
           return item['year_number'].toString().trim() ==
                   courseYearNumber.toString().trim() &&
               item['semester'].toString().trim() ==
@@ -114,9 +121,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'course_name': courseName,
           };
         }).toList();
-      });
 
-      print("Filtered Class Data: $classDataList");
+        // Add the filtered data for this course to the overall list
+        allFilteredData.addAll(filteredData);
+      }
+
+      if (allFilteredData.isEmpty) {
+        print('No matching classes found.');
+        return;
+      }
+
+      // Update state with all filtered class data
+      setState(() {
+        classDataList = allFilteredData;
+      });
     } catch (e) {
       print('Error fetching class data: $e');
     }

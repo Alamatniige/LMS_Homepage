@@ -1,11 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // For loading assets
 import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/login_page.dart';
 import 'package:lms_homepage/main.dart';
 import 'package:lms_homepage/upload_grade.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:country_state_city_pro/country_state_city_pro.dart';
 
 class EditProfilePage extends StatefulWidget {
   final String teacherId; // Declare teacherId
@@ -24,79 +22,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
 
-  // Dropdown values
-  String? region;
-  String? province;
-  String? city;
-
-  List<Region> regions = [];
-  List<Province> provinces = [];
-  List<City> cities = [];
-
-  String? selectedCityCode;
-
-  final TextEditingController regionController = TextEditingController();
-  final TextEditingController provinceController = TextEditingController();
-  final TextEditingController cityController = TextEditingController();
+  final TextEditingController countryCont = TextEditingController();
+  final TextEditingController stateCont = TextEditingController();
+  final TextEditingController cityCont = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    loadData();
-    // ignore: avoid_print
-    print("dashboard is initialized with the ID: ${widget.teacherId}");
-  }
-
-  // Load the JSON data from assets
-  Future<void> loadData() async {
-    try {
-      final regionData = await loadJsonData('assets/region.json');
-      final provinceData = await loadJsonData('assets/province.json');
-      final cityData = await loadJsonData('assets/city.json');
-
-      setState(() {
-        regions = regionData.map((item) => Region.fromJson(item)).toList();
-        provinces =
-            provinceData.map((item) => Province.fromJson(item)).toList();
-        cities = cityData.map((item) => City.fromJson(item)).toList();
-      });
-    } catch (e) {
-      // ignore: avoid_print
-      print("Error loading data: $e");
-    }
-  }
-
-  Future<List<dynamic>> loadJsonData(String path) async {
-    String jsonString = await rootBundle.loadString(path);
-    return json.decode(jsonString);
-  }
-
-  void updateProvinces() {
-    setState(() {
-      provinces = provinces
-          .where((province) =>
-              province.regionCode ==
-              regions.firstWhere((r) => r.regionName == region).regionCode)
-          .toList();
-      city = null; // Reset city
-      selectedCityCode = null; // Reset city code
-      cityController.clear();
-    });
-  }
-
-  // Method to update cities when a province is selected
-  void updateCities() {
-    setState(() {
-      cities = cities
-          .where((city) =>
-              city.provinceCode ==
-              provinces
-                  .firstWhere((p) => p.provinceName == province)
-                  .provinceCode)
-          .toList();
-      selectedCityCode = null; // Reset city code
-      cityController.clear();
-    });
   }
 
   @override
@@ -107,9 +39,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
           // Sidebar
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            width: 70, // Fixed width for the sidebar
-            color: const Color.fromARGB(
-                255, 44, 155, 68), // Fixed color for the sidebar
+            width: 70,
+            color: const Color.fromARGB(255, 44, 155, 68),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -282,18 +213,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     children: [
                       Center(
                           child: Row(
-                        mainAxisAlignment: MainAxisAlignment
-                            .center, // Centers the content horizontally
-                        crossAxisAlignment: CrossAxisAlignment
-                            .center, // Vertically centers the content
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // This will center the photo and text in the row
                           const Expanded(
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment
-                                  .center, // Centers photo and text
-                              crossAxisAlignment: CrossAxisAlignment
-                                  .center, // Centers photo and text vertically
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 CircleAvatar(
                                   radius: 26,
@@ -376,6 +302,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                         backgroundImage:
                                             AssetImage('assets/aliceg.jpg'),
                                       ),
+                                      const Text(
+                                        "Loading...",
+                                        style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold),
+                                      ),
                                       const SizedBox(height: 5),
                                       ElevatedButton(
                                         onPressed: () {
@@ -437,135 +369,39 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                             hintText:
                                                 'House/Building No., Street, Barangay'),
                                       ),
+                                      const SizedBox(width: 20),
+                                      Expanded(
+                                        child: buildTextField(
+                                          'Zip Code',
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 20),
                                   Row(
+                                    // Horizontal alignment of the children
                                     children: [
-                                      Expanded(
-                                        child: TypeAheadField<String?>(
-                                          textFieldConfiguration:
-                                              TextFieldConfiguration(
-                                            controller: regionController,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Region',
-                                              border: OutlineInputBorder(),
-                                              floatingLabelBehavior:
-                                                  FloatingLabelBehavior.always,
-                                            ),
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxWidth:
+                                              250, // Adjust the width as needed
+                                        ),
+                                        child: CountryStateCityPicker(
+                                          country: countryCont,
+                                          state: stateCont,
+                                          city: cityCont,
+                                          dialogColor: const Color.fromARGB(
+                                              255, 24, 165, 11),
+                                          textFieldDecoration:
+                                              const InputDecoration(
+                                            suffixIcon: Icon(Icons
+                                                .arrow_drop_down_outlined), // Dropdown icon for the text field
+                                            border:
+                                                OutlineInputBorder(), // Border style for the text field
                                           ),
-                                          suggestionsCallback: (pattern) {
-                                            return regions
-                                                .where((region) => region
-                                                    .regionName
-                                                    .toLowerCase()
-                                                    .contains(
-                                                        pattern.toLowerCase()))
-                                                .map((region) =>
-                                                    region.regionName)
-                                                .toList();
-                                          },
-                                          itemBuilder:
-                                              (context, String? suggestion) {
-                                            return ListTile(
-                                              title: Text(suggestion ?? ""),
-                                            );
-                                          },
-                                          onSuggestionSelected:
-                                              (String? suggestion) {
-                                            setState(() {
-                                              region = suggestion;
-                                              regionController.text =
-                                                  suggestion ?? "";
-                                              updateProvinces();
-                                            });
-                                          },
                                         ),
                                       ),
-                                      const SizedBox(width: 20),
-                                      Expanded(
-                                        child: TypeAheadField<String?>(
-                                          textFieldConfiguration:
-                                              TextFieldConfiguration(
-                                            controller: provinceController,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Province',
-                                              border: OutlineInputBorder(),
-                                              floatingLabelBehavior:
-                                                  FloatingLabelBehavior.always,
-                                            ),
-                                          ),
-                                          suggestionsCallback: (pattern) {
-                                            return provinces
-                                                .where((province) => province
-                                                    .provinceName
-                                                    .toLowerCase()
-                                                    .contains(
-                                                        pattern.toLowerCase()))
-                                                .map((province) =>
-                                                    province.provinceName)
-                                                .toList();
-                                          },
-                                          itemBuilder:
-                                              (context, String? suggestion) {
-                                            return ListTile(
-                                              title: Text(suggestion ?? ""),
-                                            );
-                                          },
-                                          onSuggestionSelected:
-                                              (String? suggestion) {
-                                            setState(() {
-                                              province = suggestion;
-                                              provinceController.text =
-                                                  suggestion ?? "";
-                                              updateCities();
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(width: 20),
-                                      Expanded(
-                                        child: TypeAheadField<String?>(
-                                          textFieldConfiguration:
-                                              TextFieldConfiguration(
-                                            controller: cityController,
-                                            decoration: const InputDecoration(
-                                              labelText: 'City / Municipality',
-                                              border: OutlineInputBorder(),
-                                              floatingLabelBehavior:
-                                                  FloatingLabelBehavior.always,
-                                            ),
-                                          ),
-                                          suggestionsCallback: (pattern) {
-                                            return cities
-                                                .where((city) => city.cityName
-                                                    .toLowerCase()
-                                                    .contains(
-                                                        pattern.toLowerCase()))
-                                                .map((city) => city.cityName)
-                                                .toList();
-                                          },
-                                          itemBuilder:
-                                              (context, String? suggestion) {
-                                            return ListTile(
-                                              title: Text(suggestion ?? ""),
-                                            );
-                                          },
-                                          onSuggestionSelected:
-                                              (String? suggestion) {
-                                            setState(() {
-                                              city = suggestion;
-                                              selectedCityCode = cities
-                                                  .firstWhere((city) =>
-                                                      city.cityName ==
-                                                      suggestion)
-                                                  .cityCode;
-                                              cityController.text =
-                                                  suggestion ?? "";
-                                            });
-                                          },
-                                        ),
-                                      ),
+                                      // You can add more horizontally arranged widgets here if needed.
                                     ],
                                   ),
 
@@ -574,9 +410,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   // Save Button
                                   Center(
                                     child: ElevatedButton(
-                                      onPressed: () {
-                                        // Save changes action
-                                      },
+                                      onPressed: () {},
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: const Color.fromARGB(
                                             255, 255, 255, 255),
@@ -608,17 +442,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget buildTextField(String labelText,
-      {String hintText = '', double hintFontSize = 14.0}) {
+  Widget buildTextField(
+    String labelText, {
+    String hintText = '',
+    double hintFontSize = 14.0,
+    TextEditingController? controller,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
+        controller: controller,
         decoration: InputDecoration(
           labelText: labelText,
           hintText: hintText,
           hintStyle: TextStyle(
-            color: Colors.black.withOpacity(0.5), // Set hint text opacity here
-            fontSize: hintFontSize, // Set the font size of the hint text
+            color: Colors.black.withOpacity(0.5),
+            fontSize: hintFontSize,
           ),
           floatingLabelBehavior: FloatingLabelBehavior.always,
           border: const OutlineInputBorder(),
@@ -626,60 +465,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
-    );
-  }
-}
-
-class Region {
-  final String regionCode;
-  final String regionName;
-
-  Region({required this.regionCode, required this.regionName});
-
-  factory Region.fromJson(Map<String, dynamic> json) {
-    return Region(
-      regionCode: json['region_code'],
-      regionName: json['region_name'],
-    );
-  }
-}
-
-class Province {
-  final String provinceCode;
-  final String provinceName;
-  final String regionCode;
-
-  Province({
-    required this.provinceCode,
-    required this.provinceName,
-    required this.regionCode,
-  });
-
-  factory Province.fromJson(Map<String, dynamic> json) {
-    return Province(
-      provinceCode: json['province_code'],
-      provinceName: json['province_name'],
-      regionCode: json['region_code'],
-    );
-  }
-}
-
-class City {
-  final String cityCode;
-  final String cityName;
-  final String provinceCode;
-
-  City({
-    required this.cityCode,
-    required this.cityName,
-    required this.provinceCode,
-  });
-
-  factory City.fromJson(Map<String, dynamic> json) {
-    return City(
-      cityCode: json['city_code'],
-      cityName: json['city_name'],
-      provinceCode: json['province_code'],
     );
   }
 }

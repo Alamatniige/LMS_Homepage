@@ -9,6 +9,7 @@ import 'package:lms_homepage/login_page.dart';
 import 'main.dart';
 import 'upload_grade.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SubjectPage extends StatefulWidget {
   final String teacherId;
@@ -41,6 +42,7 @@ class _SubjectPageState extends State<SubjectPage> {
   bool isHoveringUpload = false;
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
+  bool isHoveringHome = false;
 
   final ScrollController _scrollController = ScrollController();
   bool showLeftArrow = false;
@@ -95,9 +97,8 @@ class _SubjectPageState extends State<SubjectPage> {
           // Sidebar
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            width: 70, // Fixed width for the sidebar
-            color: const Color.fromARGB(
-                255, 44, 155, 68), // Fixed color for the sidebar
+            width: 70,
+            color: const Color.fromARGB(255, 44, 155, 68),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -113,7 +114,7 @@ class _SubjectPageState extends State<SubjectPage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const EditProfilePage(teacherId: ''),
+                                  EditProfilePage(teacherId: widget.teacherId),
                             ),
                           );
                         },
@@ -144,8 +145,8 @@ class _SubjectPageState extends State<SubjectPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const UploadGradePage(
-                                    teacherId: 'teacherId'),
+                                builder: (context) => UploadGradePage(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -188,8 +189,8 @@ class _SubjectPageState extends State<SubjectPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const ArchiveClassScreen(teacherId: ''),
+                                builder: (context) => ArchiveClassScreen(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -211,6 +212,46 @@ class _SubjectPageState extends State<SubjectPage> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    //Home
+                    MouseRegion(
+                      onEnter: (_) {
+                        setState(() {
+                          isHoveringHome = true;
+                        });
+                      },
+                      onExit: (_) {
+                        setState(() {
+                          isHoveringHome = false;
+                        });
+                      },
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DashboardScreen(teacherId: widget.teacherId),
+                            ),
+                          );
+                        },
+                        child: Icon(
+                          Icons.arrow_back,
+                          size: 40,
+                          color: isHoveringHome
+                              ? const Color.fromARGB(255, 255, 255, 255)
+                              : const Color.fromARGB(255, 0, 0, 0),
+                          shadows: isHoveringHome
+                              ? [
+                                  const BoxShadow(
+                                    color: Color.fromARGB(255, 69, 238, 106),
+                                    blurRadius: 10,
+                                  ),
+                                ]
+                              : [],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 Padding(
@@ -229,7 +270,14 @@ class _SubjectPageState extends State<SubjectPage> {
                     child: Tooltip(
                       message: 'Log Out',
                       child: GestureDetector(
-                        onTap: () {
+                        onTap: () async {
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          await prefs.clear();
+
+                          print(
+                              "User  has logged out and session data cleared.");
+
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -258,7 +306,6 @@ class _SubjectPageState extends State<SubjectPage> {
               ],
             ),
           ),
-
           // Main Content
           Expanded(
             child: Padding(
@@ -321,21 +368,6 @@ class _SubjectPageState extends State<SubjectPage> {
                                 ),
                               ],
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => DashboardScreen(
-                                      teacherId: widget.teacherId),
-                                ),
-                              );
-                            },
-                            color: const Color.fromRGBO(44, 155, 68, 1),
-                            tooltip: 'Go to Home',
-                            iconSize: 40,
                           ),
                         ],
                       ),

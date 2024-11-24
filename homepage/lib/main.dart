@@ -7,6 +7,7 @@ import 'package:lms_homepage/subject_page.dart';
 import 'upload_grade.dart';
 import 'package:lms_homepage/login_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -166,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const EditProfilePage(teacherId: ''),
+                                  EditProfilePage(teacherId: widget.teacherId),
                             ),
                           );
                         },
@@ -197,8 +198,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const UploadGradePage(
-                                    teacherId: 'teacherId'),
+                                builder: (context) => UploadGradePage(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -241,8 +242,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const ArchiveClassScreen(teacherId: ''),
+                                builder: (context) => ArchiveClassScreen(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -266,6 +267,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
+
+                //Log out
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20),
                   child: MouseRegion(
@@ -282,7 +285,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Tooltip(
                       message: 'Log Out',
                       child: GestureDetector(
-                        onTap: () {
+                        onTap: () async {
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          await prefs.clear();
+
+                          print(
+                              "User  has logged out and session data cleared.");
+
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(

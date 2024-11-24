@@ -16,11 +16,8 @@ dependencies:
   provider: ^6.0.0
   country_state_city_pro: ^0.0.6
   csc_picker: ^0.2.6
-
-
-
-
-
+  shared_preferences: ^2.3.3
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

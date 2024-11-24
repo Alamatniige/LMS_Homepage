@@ -4,20 +4,30 @@ import 'package:lms_homepage/edit_profile_page.dart';
 import 'package:lms_homepage/login_page.dart';
 import 'package:lms_homepage/subject_page.dart';
 import 'package:lms_homepage/upload_grade.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CreatePostPage extends StatefulWidget {
   final String teacherId;
   final String className;
   final String section;
+  final String courseName;
+  final String programName;
+  final String departmentName;
+  final String yearNumber;
 
   const CreatePostPage({
     super.key,
     required this.teacherId,
     required this.className,
     required this.section,
+    required this.courseName,
+    required this.programName,
+    required this.departmentName,
+    required this.yearNumber,
   }); // Update the constructor to accept teacherId
 
   @override
+  // ignore: library_private_types_in_public_api
   _CreatePostPageState createState() => _CreatePostPageState();
 }
 
@@ -27,6 +37,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
   bool isHoveringUpload = false;
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
+  bool isHoveringHome = false;
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +47,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
           // Sidebar
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            width: 70, // Fixed width for the sidebar
-            color: const Color.fromARGB(
-                255, 44, 155, 68), // Fixed color for the sidebar
+            width: 70,
+            color: const Color.fromARGB(255, 44, 155, 68),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -54,7 +64,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const EditProfilePage(teacherId: ''),
+                                  EditProfilePage(teacherId: widget.teacherId),
                             ),
                           );
                         },
@@ -85,8 +95,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const UploadGradePage(
-                                    teacherId: 'teacherId'),
+                                builder: (context) => UploadGradePage(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -129,8 +139,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const ArchiveClassScreen(teacherId: ''),
+                                builder: (context) => ArchiveClassScreen(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -152,6 +162,52 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    //Home
+                    MouseRegion(
+                      onEnter: (_) {
+                        setState(() {
+                          isHoveringHome = true;
+                        });
+                      },
+                      onExit: (_) {
+                        setState(() {
+                          isHoveringHome = false;
+                        });
+                      },
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SubjectPage(
+                                  teacherId: widget.teacherId,
+                                  className: widget.className,
+                                  section: widget.section,
+                                  courseName: widget.courseName,
+                                  programName: widget.programName,
+                                  departmentName: widget.departmentName,
+                                  yearNumber: widget.yearNumber),
+                            ),
+                          );
+                        },
+                        child: Icon(
+                          Icons.arrow_back,
+                          size: 40,
+                          color: isHoveringHome
+                              ? const Color.fromARGB(255, 255, 255, 255)
+                              : const Color.fromARGB(255, 0, 0, 0),
+                          shadows: isHoveringHome
+                              ? [
+                                  const BoxShadow(
+                                    color: Color.fromARGB(255, 69, 238, 106),
+                                    blurRadius: 10,
+                                  ),
+                                ]
+                              : [],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 Padding(
@@ -170,7 +226,14 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     child: Tooltip(
                       message: 'Log Out',
                       child: GestureDetector(
-                        onTap: () {
+                        onTap: () async {
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          await prefs.clear();
+
+                          print(
+                              "User  has logged out and session data cleared.");
+
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -199,7 +262,6 @@ class _CreatePostPageState extends State<CreatePostPage> {
               ],
             ),
           ),
-
           // Main Content
           Expanded(
             child: Column(
@@ -213,61 +275,52 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       mainAxisAlignment:
                           MainAxisAlignment.spaceBetween, // Space out the items
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment
                                 .center, // Center logo and text
                             children: [
-                              CircleAvatar(
+                              const CircleAvatar(
                                 radius: 26,
                                 backgroundImage: AssetImage('assets/ccst.jpg'),
                               ),
-                              SizedBox(width: 20),
+                              const SizedBox(width: 20),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment
                                     .center, // Center the text
                                 children: [
                                   Text(
-                                    "College of Computer Studies and Technology",
+                                    widget.departmentName,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
+                                      height:
+                                          1.0, // Adjust this value to reduce spacing
                                     ),
                                   ),
                                   Text(
-                                    "CC214 - Data Structure and Algorithm",
+                                    widget.programName,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 12),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      height:
+                                          0.1, // Adjust this value to reduce spacing
+                                    ),
                                   ),
                                   Text(
-                                    "BSIT - 2C",
+                                    '${widget.courseName} ${widget.yearNumber}-${widget.className}',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 12),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      height:
+                                          2.0, // Adjust this value to reduce spacing
+                                    ),
                                   ),
                                 ],
                               ),
                             ],
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SubjectPage(
-                                  teacherId: widget.teacherId,
-                                  className: widget
-                                      .className, // Pass the className from widget
-                                  section: widget.section,
-                                ),
-                              ),
-                            );
-                          },
-                          color: const Color.fromRGBO(44, 155, 68, 1),
-                          tooltip: 'Go Back',
-                          iconSize: 40,
                         ),
                       ],
                     ),

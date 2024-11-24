@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:lms_homepage/activity_details.dart';
 import 'package:lms_homepage/archive_class.dart';
@@ -7,17 +9,26 @@ import 'package:lms_homepage/login_page.dart';
 import 'main.dart';
 import 'upload_grade.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SubjectPage extends StatefulWidget {
   final String teacherId;
   final String className;
   final String section;
+  final String courseName;
+  final String programName;
+  final String departmentName;
+  final String yearNumber;
 
   const SubjectPage({
     super.key,
     required this.teacherId,
     required this.className,
     required this.section,
+    required this.courseName,
+    required this.programName,
+    required this.departmentName,
+    required this.yearNumber,
   });
 
   @override
@@ -31,6 +42,7 @@ class _SubjectPageState extends State<SubjectPage> {
   bool isHoveringUpload = false;
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
+  bool isHoveringHome = false;
 
   final ScrollController _scrollController = ScrollController();
   bool showLeftArrow = false;
@@ -85,9 +97,8 @@ class _SubjectPageState extends State<SubjectPage> {
           // Sidebar
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            width: 70, // Fixed width for the sidebar
-            color: const Color.fromARGB(
-                255, 44, 155, 68), // Fixed color for the sidebar
+            width: 70,
+            color: const Color.fromARGB(255, 44, 155, 68),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -103,7 +114,7 @@ class _SubjectPageState extends State<SubjectPage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const EditProfilePage(teacherId: ''),
+                                  EditProfilePage(teacherId: widget.teacherId),
                             ),
                           );
                         },
@@ -134,8 +145,8 @@ class _SubjectPageState extends State<SubjectPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const UploadGradePage(
-                                    teacherId: 'teacherId'),
+                                builder: (context) => UploadGradePage(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -178,8 +189,8 @@ class _SubjectPageState extends State<SubjectPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const ArchiveClassScreen(teacherId: ''),
+                                builder: (context) => ArchiveClassScreen(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -201,6 +212,46 @@ class _SubjectPageState extends State<SubjectPage> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    //Home
+                    MouseRegion(
+                      onEnter: (_) {
+                        setState(() {
+                          isHoveringHome = true;
+                        });
+                      },
+                      onExit: (_) {
+                        setState(() {
+                          isHoveringHome = false;
+                        });
+                      },
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DashboardScreen(teacherId: widget.teacherId),
+                            ),
+                          );
+                        },
+                        child: Icon(
+                          Icons.arrow_back,
+                          size: 40,
+                          color: isHoveringHome
+                              ? const Color.fromARGB(255, 255, 255, 255)
+                              : const Color.fromARGB(255, 0, 0, 0),
+                          shadows: isHoveringHome
+                              ? [
+                                  const BoxShadow(
+                                    color: Color.fromARGB(255, 69, 238, 106),
+                                    blurRadius: 10,
+                                  ),
+                                ]
+                              : [],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 Padding(
@@ -219,7 +270,14 @@ class _SubjectPageState extends State<SubjectPage> {
                     child: Tooltip(
                       message: 'Log Out',
                       child: GestureDetector(
-                        onTap: () {
+                        onTap: () async {
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          await prefs.clear();
+
+                          print(
+                              "User  has logged out and session data cleared.");
+
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -248,7 +306,6 @@ class _SubjectPageState extends State<SubjectPage> {
               ],
             ),
           ),
-
           // Main Content
           Expanded(
             child: Padding(
@@ -264,58 +321,53 @@ class _SubjectPageState extends State<SubjectPage> {
                         mainAxisAlignment: MainAxisAlignment
                             .spaceBetween, // Space out the items
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment
                                   .center, // Center logo and text
                               children: [
-                                CircleAvatar(
+                                const CircleAvatar(
                                   radius: 26,
                                   backgroundImage:
                                       AssetImage('assets/ccst.jpg'),
                                 ),
-                                SizedBox(width: 20),
+                                const SizedBox(width: 20),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment
                                       .center, // Center the text
                                   children: [
                                     Text(
-                                      "College of Computer Studies and Technology",
+                                      widget.departmentName,
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
+                                        height:
+                                            1.0, // Adjust this value to reduce spacing
                                       ),
                                     ),
                                     Text(
-                                      "CC214 - Data Structure and Algorithm",
+                                      widget.programName,
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 12),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        height:
+                                            0.1, // Adjust this value to reduce spacing
+                                      ),
                                     ),
                                     Text(
-                                      "BSIT - 2C",
+                                      '${widget.courseName} ${widget.yearNumber}-${widget.className}',
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 12),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        height:
+                                            2.0, // Adjust this value to reduce spacing
+                                      ),
                                     ),
                                   ],
                                 ),
                               ],
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => DashboardScreen(
-                                      teacherId: widget.teacherId),
-                                ),
-                              );
-                            },
-                            color: const Color.fromRGBO(44, 155, 68, 1),
-                            tooltip: 'Go to Home',
-                            iconSize: 40,
                           ),
                         ],
                       ),
@@ -408,11 +460,14 @@ class _SubjectPageState extends State<SubjectPage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => CreatePostPage(
-                                    teacherId: widget.teacherId,
-                                    className: widget
-                                        .className, // Pass the className from widget
-                                    section: widget.section,
-                                  ),
+                                      teacherId: widget.teacherId,
+                                      className: widget
+                                          .className, // Pass the className from widget
+                                      section: widget.section,
+                                      courseName: widget.courseName,
+                                      programName: widget.programName,
+                                      departmentName: widget.departmentName,
+                                      yearNumber: widget.yearNumber),
                                 ),
                               );
                             },
@@ -451,12 +506,13 @@ class _SubjectPageState extends State<SubjectPage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => ActivityDetailsPage(
-                                    teacherId: widget.teacherId,
-                                    className: widget
-                                        .className, // Pass the className from widget
-                                    section: widget
-                                        .section, // Pass the section from widget
-                                  ),
+                                      teacherId: widget.teacherId,
+                                      className: widget.className,
+                                      section: widget.section,
+                                      courseName: widget.courseName,
+                                      programName: widget.programName,
+                                      departmentName: widget.departmentName,
+                                      yearNumber: widget.yearNumber),
                                 ),
                               );
                             },
@@ -520,12 +576,17 @@ class _SubjectPageState extends State<SubjectPage> {
                                           MaterialPageRoute(
                                             builder: (context) =>
                                                 ActivityDetailsPage(
-                                              teacherId: widget.teacherId,
-                                              className: widget
-                                                  .className, // Pass the className from widget
-                                              section: widget
-                                                  .section, // Pass the section from widget
-                                            ),
+                                                    teacherId: widget.teacherId,
+                                                    className: widget.className,
+                                                    section: widget.section,
+                                                    courseName:
+                                                        widget.courseName,
+                                                    programName:
+                                                        widget.programName,
+                                                    departmentName:
+                                                        widget.departmentName,
+                                                    yearNumber:
+                                                        widget.yearNumber),
                                           ),
                                         );
                                       },
@@ -556,10 +617,26 @@ class _SubjectPageState extends State<SubjectPage> {
 
   void _showWeekModal(BuildContext context, String week) {
     List<Map<String, String>> modules = [];
+    final TextEditingController moduleNameController = TextEditingController();
     final TextEditingController linkController = TextEditingController();
+    String selectedCourseId = ''; // To keep track of selected course ID
     bool isAddingLink = false;
 
-    Future<void> insertLinkToDatabase(String link) async {
+    // Sample course data for suggestions
+    final List<Map<String, String>> courses = [
+      {'id': '1', 'title': 'Mathematics'},
+      {'id': '2', 'title': 'Science'},
+      {'id': '3', 'title': 'History'},
+      {'id': '4', 'title': 'Geography'},
+      {'id': '5', 'title': 'Literature'},
+      {'id': '6', 'title': 'Art'},
+      {'id': '7', 'title': 'Music'},
+      {'id': '8', 'title': 'Physical Education'},
+      {'id': '9', 'title': 'Computer Science'},
+    ];
+
+    Future<void> insertLinkToDatabase(
+        String moduleName, String link, String courseId) async {
       if (widget.teacherId.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -569,8 +646,6 @@ class _SubjectPageState extends State<SubjectPage> {
         );
         return;
       }
-
-      print("Teacher ID: '${widget.teacherId}'");
 
       int? teacherIdInt = int.tryParse(widget.teacherId);
       if (teacherIdInt == null) {
@@ -583,26 +658,39 @@ class _SubjectPageState extends State<SubjectPage> {
         return;
       }
 
+      int? courseIdInt = int.tryParse(courseId);
+      if (courseIdInt == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid Course ID.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
+
       try {
-        final response = await Supabase.instance.client.from('module').insert({
-          'modulename': link,
-          'filepath': link,
-          'teacherid': teacherIdInt,
+        final response = await Supabase.instance.client.from('modules').insert({
+          'name': moduleName,
+          'course_id': courseIdInt,
+          'url': link,
         });
 
         if (response != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Link uploaded successfully!'),
+              content: Text('Module uploaded successfully!'),
               duration: Duration(seconds: 2),
             ),
           );
-          modules.add({'name': link}); // Add the link to the displayed list
+
+          // Add the module to the displayed list
+          modules.add({'name': moduleName, 'url': link, 'course_id': courseId});
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error uploading link: ${e.toString()}'),
+            content: Text('Error uploading module: ${e.toString()}'),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -642,75 +730,79 @@ class _SubjectPageState extends State<SubjectPage> {
                   children: [
                     if (isAddingLink) ...[
                       TextField(
+                        controller: moduleNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Enter Module Name',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      TextField(
                         controller: linkController,
                         decoration: const InputDecoration(
                           labelText: 'Enter Module Link',
                           border: OutlineInputBorder(),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      DropdownButton<String>(
+                        value:
+                            selectedCourseId.isEmpty ? null : selectedCourseId,
+                        hint: const Text('Select Course ID'),
+                        items: courses.map((course) {
+                          return DropdownMenuItem<String>(
+                            value: course['id'],
+                            child: Text(course['title']!),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedCourseId = value!;
+                          });
+                        },
+                      ),
                       ElevatedButton(
-                        onPressed: () async {
-                          String link = linkController.text.trim();
-                          if (link.isNotEmpty) {
-                            await insertLinkToDatabase(link);
-                            setState(() {
-                              linkController.clear();
-                              isAddingLink = false; // Hide field after save
-                            });
+                        onPressed: () {
+                          if (moduleNameController.text.isNotEmpty &&
+                              linkController.text.isNotEmpty &&
+                              selectedCourseId.isNotEmpty) {
+                            insertLinkToDatabase(
+                              moduleNameController.text,
+                              linkController.text,
+                              selectedCourseId,
+                            );
+                            moduleNameController.clear();
+                            linkController.clear();
+                            selectedCourseId = '';
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Please enter a valid link.'),
+                                content: Text('Please fill all fields.'),
                                 duration: Duration(seconds: 2),
                               ),
                             );
                           }
                         },
-                        child: const Text("Save Link"),
+                        child: const Text('Save Module'),
                       ),
                     ],
-                    const SizedBox(height: 10),
-                    for (var module in modules) ...[
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Column(
-                            children: [
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(Icons.link, size: 30),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                module['name']!,
-                                style: const TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(width: 20),
-                        ],
-                      ),
-                      const Divider(
-                        thickness: 1,
-                        color: Colors.grey,
-                      ),
-                    ],
+                    const SizedBox(height: 20),
+                    const Text('Uploaded Modules:',
+                        style: TextStyle(fontSize: 18)),
+                    ...modules.map((module) {
+                      return ListTile(
+                        title: Text(module['name']!),
+                        subtitle: Text(module['url']!),
+                        trailing: Text('Course ID: ${module['course_id']}'),
+                      );
+                    }).toList(),
                   ],
                 ),
               ),
-              actions: <Widget>[
+              actions: [
                 TextButton(
-                  child: const Text("Close"),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
+                  child: const Text('Close'),
                 ),
               ],
             );

@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
@@ -5,6 +7,7 @@ import 'package:lms_homepage/subject_page.dart';
 import 'upload_grade.dart';
 import 'package:lms_homepage/login_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,48 +63,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> fetchClassData() async {
     try {
-      final teacherData = await Supabase.instance.client
-          .from('teacher')
+      // Fetch the teacher's course IDs
+      final teacherCourses = await Supabase.instance.client
+          .from('teacher_courses')
           .select('course_id')
-          .eq('id', widget.teacherId)
-          .single();
+          .eq('teacher_id', widget.teacherId);
 
-      final teacherCourseId = teacherData['course_id'];
-
-      final courseData = await Supabase.instance.client
-          .from('college_course')
-          .select('name')
-          .eq('id', teacherCourseId)
-          .single();
-
-      if (courseData['name'] == null) {
-        print("Course not found.");
+      if (teacherCourses.isEmpty) {
+        print('No course found for the teacher.');
         return;
       }
 
-      final courseName = courseData['name'];
+      // List to store all filtered class data
+      List<Map<String, dynamic>> allFilteredData = [];
 
-      // Step 3: Fetch sections related to the teacher's course_id
-      final data = await Supabase.instance.client.from('section').select(
-          'name, year_number, college_program(name, college_department(name))');
+      // Loop through all courses associated with the teacher
+      for (var course in teacherCourses) {
+        final teacherCourseId = course['course_id'];
 
-      if (data.isEmpty) {
-        print("No sections found for course_id: $teacherCourseId");
-        return;
-      }
+        // Fetch course details for each course
+        final courseData = await Supabase.instance.client
+            .from('college_course')
+            .select('name, year_number, semester')
+            .eq('id', teacherCourseId)
+            .single();
 
-      // Step 4: Process the data
-      setState(() {
-        classDataList = data.map((item) {
+        if (courseData['name'] == null) {
+          print("Course not found for course_id: $teacherCourseId.");
+          continue; // Skip if course not found
+        }
+
+        final courseName = courseData['name'];
+        final courseYearNumber = courseData['year_number'];
+        final courseSemester = courseData['semester'];
+
+        // Fetch sections associated with the course
+        final data = await Supabase.instance.client.from('section').select(
+            'name, year_number, semester, college_program(name, college_department(name))');
+
+        if (data.isEmpty) {
+          print("No sections found for course_id: $teacherCourseId");
+          continue; // Skip if no sections are found
+        }
+
+        // Filter sections based on course details
+        final filteredData = data.where((item) {
+          return item['year_number'].toString().trim() ==
+                  courseYearNumber.toString().trim() &&
+              item['semester'].toString().trim() ==
+                  courseSemester.toString().trim();
+        }).map((item) {
           return {
             'class_name': item['name'],
             'year_number': item['year_number'],
             'program_name': item['college_program']['name'],
             'department_name': item['college_program']['college_department']
                 ['name'],
-            'course_name': courseName, // Add course name to the class data
+            'course_name': courseName,
           };
         }).toList();
+
+        // Add the filtered data for this course to the overall list
+        allFilteredData.addAll(filteredData);
+      }
+
+      if (allFilteredData.isEmpty) {
+        print('No matching classes found.');
+        return;
+      }
+
+      // Update state with all filtered class data
+      setState(() {
+        classDataList = allFilteredData;
       });
     } catch (e) {
       print('Error fetching class data: $e');
@@ -134,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const EditProfilePage(teacherId: ''),
+                                  EditProfilePage(teacherId: widget.teacherId),
                             ),
                           );
                         },
@@ -165,8 +198,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const UploadGradePage(
-                                    teacherId: 'teacherId'),
+                                builder: (context) => UploadGradePage(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -209,8 +242,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const ArchiveClassScreen(teacherId: ''),
+                                builder: (context) => ArchiveClassScreen(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -234,6 +267,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
+
+                //Log out
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20),
                   child: MouseRegion(
@@ -250,7 +285,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Tooltip(
                       message: 'Log Out',
                       child: GestureDetector(
-                        onTap: () {
+                        onTap: () async {
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          await prefs.clear();
+
+                          print(
+                              "User  has logged out and session data cleared.");
+
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -359,8 +401,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget classCard(String className, String yearNumber, String courseName,
-      String programName, String departmentName, String teacherId) {
+  Widget classCard(
+    String className,
+    String yearNumber,
+    String courseName,
+    String programName,
+    String departmentName,
+    String teacherId,
+  ) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -370,6 +418,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               teacherId: teacherId,
               className: className,
               section: yearNumber,
+              courseName: courseName,
+              programName: programName,
+              departmentName: departmentName,
+              yearNumber: yearNumber,
             ),
           ),
         );
@@ -403,12 +455,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      courseName, // Display course name
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "$yearNumber$className", // Display year number and class name
+                      "$courseName $yearNumber$className", // Display year number and class name
                       style: const TextStyle(fontSize: 10),
                     ),
                   ],

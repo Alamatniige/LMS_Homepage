@@ -1,18 +1,21 @@
-import 'dart:convert';
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // For loading assets
 import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/login_page.dart';
 import 'package:lms_homepage/main.dart';
 import 'package:lms_homepage/upload_grade.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:csc_picker/csc_picker.dart';
 
 class EditProfilePage extends StatefulWidget {
-  final String teacherId; // Declare teacherId
+  final String teacherId;
 
   const EditProfilePage({Key? key, required this.teacherId}) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _EditProfilePageState createState() => _EditProfilePageState();
 }
 
@@ -22,79 +25,74 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool isHoveringUpload = false;
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
+  bool isHoveringHome = false;
+  String firstName = "Loading...";
+  String lastName = " ";
+  String? countryValue;
+  String? stateValue;
+  String? cityValue;
 
-  // Dropdown values
-  String? region;
-  String? province;
-  String? city;
-
-  List<Region> regions = [];
-  List<Province> provinces = [];
-  List<City> cities = [];
-
-  String? selectedCityCode;
-
-  final TextEditingController regionController = TextEditingController();
-  final TextEditingController provinceController = TextEditingController();
-  final TextEditingController cityController = TextEditingController();
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController middleNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  final TextEditingController zipCodeController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    loadData();
-    print("dashboard is initialized with the ID: ${widget.teacherId}");
+    print("Edit Profile is initialized with the ID: ${widget.teacherId}");
+    fetchTeacherData();
   }
 
-  // Load the JSON data from assets
-  Future<void> loadData() async {
-    try {
-      final regionData = await loadJsonData('assets/region.json');
-      final provinceData = await loadJsonData('assets/province.json');
-      final cityData = await loadJsonData('assets/city.json');
+  Future<void> fetchTeacherData() async {
+    final teacherData = await Supabase.instance.client
+        .from('teacher')
+        .select(
+            'first_name, middle_name, last_name, email, phone, address, zip_code, country, state, city')
+        .eq('id', widget.teacherId)
+        .single();
 
-      setState(() {
-        regions = regionData.map((item) => Region.fromJson(item)).toList();
-        provinces =
-            provinceData.map((item) => Province.fromJson(item)).toList();
-        cities = cityData.map((item) => City.fromJson(item)).toList();
-      });
-    } catch (e) {
-      // ignore: avoid_print
-      print("Error loading data: $e");
+    setState(() {
+      firstNameController.text = teacherData['first_name'] ?? "";
+      middleNameController.text = teacherData['middle_name'] ?? "";
+      lastNameController.text = teacherData['last_name'] ?? "";
+      emailController.text = teacherData['email'] ?? "";
+      phoneController.text = teacherData['phone'] ?? "";
+      addressController.text = teacherData['address'] ?? "";
+      zipCodeController.text = teacherData['zip_code'] ?? "";
+      countryValue =
+          teacherData['country'] ?? ""; // Assuming you have these fields
+      stateValue = teacherData['state'] ?? "";
+      cityValue = teacherData['city'] ?? "";
+    });
+
+    if (teacherData.isEmpty) {
+      print('No data found for the teacher.');
+      return;
     }
   }
 
-  Future<List<dynamic>> loadJsonData(String path) async {
-    String jsonString = await rootBundle.loadString(path);
-    return json.decode(jsonString);
-  }
+  Future<void> updateTeacherData() async {
+    await Supabase.instance.client.from('teacher').update({
+      'first_name': firstNameController.text,
+      'middle_name': middleNameController.text,
+      'last_name': lastNameController.text,
+      'email': emailController.text,
+      'phone': phoneController.text,
+      'address': addressController.text,
+      'zip_code': zipCodeController.text,
+      'country': countryValue, // Add country to update
+      'state': stateValue, // Add state to update
+      'city': cityValue,
+    }).eq('id', widget.teacherId);
 
-  void updateProvinces() {
-    setState(() {
-      provinces = provinces
-          .where((province) =>
-              province.regionCode ==
-              regions.firstWhere((r) => r.regionName == region).regionCode)
-          .toList();
-      city = null; // Reset city
-      selectedCityCode = null; // Reset city code
-      cityController.clear();
-    });
-  }
-
-  // Method to update cities when a province is selected
-  void updateCities() {
-    setState(() {
-      cities = cities
-          .where((city) =>
-              city.provinceCode ==
-              provinces
-                  .firstWhere((p) => p.provinceName == province)
-                  .provinceCode)
-          .toList();
-      selectedCityCode = null; // Reset city code
-      cityController.clear();
-    });
+    // Optionally, you can still provide feedback to the user after the update
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profile updated successfully!')),
+    );
   }
 
   @override
@@ -105,9 +103,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
           // Sidebar
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            width: 70, // Fixed width for the sidebar
-            color: const Color.fromARGB(
-                255, 44, 155, 68), // Fixed color for the sidebar
+            width: 70,
+            color: const Color.fromARGB(255, 44, 155, 68),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -123,7 +120,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const EditProfilePage(teacherId: ''),
+                                  EditProfilePage(teacherId: widget.teacherId),
                             ),
                           );
                         },
@@ -154,8 +151,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const UploadGradePage(
-                                    teacherId: 'teacherId'),
+                                builder: (context) => UploadGradePage(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -198,8 +195,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const ArchiveClassScreen(teacherId: ''),
+                                builder: (context) => ArchiveClassScreen(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -221,6 +218,46 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    //Home
+                    MouseRegion(
+                      onEnter: (_) {
+                        setState(() {
+                          isHoveringHome = true;
+                        });
+                      },
+                      onExit: (_) {
+                        setState(() {
+                          isHoveringHome = false;
+                        });
+                      },
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DashboardScreen(teacherId: widget.teacherId),
+                            ),
+                          );
+                        },
+                        child: Icon(
+                          Icons.arrow_back,
+                          size: 40,
+                          color: isHoveringHome
+                              ? const Color.fromARGB(255, 255, 255, 255)
+                              : const Color.fromARGB(255, 0, 0, 0),
+                          shadows: isHoveringHome
+                              ? [
+                                  const BoxShadow(
+                                    color: Color.fromARGB(255, 69, 238, 106),
+                                    blurRadius: 10,
+                                  ),
+                                ]
+                              : [],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 Padding(
@@ -239,7 +276,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     child: Tooltip(
                       message: 'Log Out',
                       child: GestureDetector(
-                        onTap: () {
+                        onTap: () async {
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          await prefs.clear();
+
+                          print(
+                              "User  has logged out and session data cleared.");
+
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -274,24 +318,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header
-                Padding(
-                  padding: const EdgeInsets.only(top: 20),
+                const Padding(
+                  padding: EdgeInsets.only(top: 20),
                   child: Column(
                     children: [
                       Center(
                           child: Row(
-                        mainAxisAlignment: MainAxisAlignment
-                            .center, // Centers the content horizontally
-                        crossAxisAlignment: CrossAxisAlignment
-                            .center, // Vertically centers the content
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // This will center the photo and text in the row
-                          const Expanded(
+                          Expanded(
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment
-                                  .center, // Centers photo and text
-                              crossAxisAlignment: CrossAxisAlignment
-                                  .center, // Centers photo and text vertically
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 CircleAvatar(
                                   radius: 26,
@@ -326,27 +365,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               ],
                             ),
                           ),
-
-                          // Back button aligned to the right
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => DashboardScreen(
-                                      teacherId: widget.teacherId),
-                                ),
-                              );
-                            },
-                            color: const Color.fromRGBO(44, 155, 68, 1),
-                            tooltip: 'Go to Home',
-                            iconSize: 40,
-                          ),
                         ],
                       )),
-                      const SizedBox(height: 10),
-                      const Text(
+                      SizedBox(height: 10),
+                      Text(
                         'Edit Profile',
                         style: TextStyle(
                             fontSize: 24, fontWeight: FontWeight.bold),
@@ -374,6 +396,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                         backgroundImage:
                                             AssetImage('assets/aliceg.jpg'),
                                       ),
+                                      Text(
+                                        "Good day! ${lastNameController.text}, ${firstNameController.text}",
+                                        style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold),
+                                      ),
                                       const SizedBox(height: 5),
                                       ElevatedButton(
                                         onPressed: () {
@@ -399,18 +427,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                       Expanded(
                                         child: buildTextField(
                                           'First Name',
+                                          controller: firstNameController,
                                         ),
                                       ),
                                       const SizedBox(width: 20),
                                       Expanded(
                                         child: buildTextField(
                                           'Middle Name',
+                                          controller: middleNameController,
                                         ),
                                       ),
                                       const SizedBox(width: 20),
                                       Expanded(
                                         child: buildTextField(
                                           'Last Name',
+                                          controller: lastNameController,
                                         ),
                                       ),
                                     ],
@@ -421,145 +452,87 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                       Expanded(
                                         child: buildTextField(
                                           'Email',
+                                          controller: emailController,
                                         ),
                                       ),
                                       const SizedBox(width: 20),
                                       Expanded(
                                         child: buildTextField(
                                           'Phone Number',
+                                          controller: phoneController,
                                         ),
                                       ),
                                       const SizedBox(width: 20),
                                       Expanded(
-                                        child: buildTextField('Adress',
-                                            hintText:
-                                                'House/Building No., Street, Barangay'),
+                                        child: buildTextField(
+                                          'Address',
+                                          hintText:
+                                              'House/Building No., Street, Barangay',
+                                          controller: addressController,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 20),
+                                      Expanded(
+                                        child: buildTextField('Zip Code',
+                                            controller: zipCodeController),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 20),
+                                  const SizedBox(height: 16),
                                   Row(
                                     children: [
                                       Expanded(
-                                        child: TypeAheadField<String?>(
-                                          textFieldConfiguration:
-                                              TextFieldConfiguration(
-                                            controller: regionController,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Region',
-                                              border: OutlineInputBorder(),
-                                              floatingLabelBehavior:
-                                                  FloatingLabelBehavior.always,
+                                        child: CSCPicker(
+                                          layout: Layout.vertical,
+                                          showCities: true,
+                                          showStates: true,
+                                          flagState: CountryFlag.ENABLE,
+                                          dropdownDecoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(5),
+                                            color: Colors.white,
+                                            border: Border.all(
+                                              color: const Color.fromARGB(
+                                                  171, 0, 0, 0),
+                                              width: 1,
                                             ),
                                           ),
-                                          suggestionsCallback: (pattern) {
-                                            return regions
-                                                .where((region) => region
-                                                    .regionName
-                                                    .toLowerCase()
-                                                    .contains(
-                                                        pattern.toLowerCase()))
-                                                .map((region) =>
-                                                    region.regionName)
-                                                .toList();
-                                          },
-                                          itemBuilder:
-                                              (context, String? suggestion) {
-                                            return ListTile(
-                                              title: Text(suggestion ?? ""),
-                                            );
-                                          },
-                                          onSuggestionSelected:
-                                              (String? suggestion) {
+                                          disabledDropdownDecoration:
+                                              BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(5),
+                                            color: Colors.grey.shade300,
+                                            border: Border.all(
+                                              color: const Color.fromARGB(
+                                                  171, 0, 0, 0),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          countrySearchPlaceholder: "Country",
+                                          stateSearchPlaceholder: "State",
+                                          citySearchPlaceholder: "City",
+                                          countryDropdownLabel: "*Country",
+                                          stateDropdownLabel: "*State",
+                                          cityDropdownLabel: "*City",
+                                          onCountryChanged: (value) {
+                                            print("Selected Country: $value");
                                             setState(() {
-                                              region = suggestion;
-                                              regionController.text =
-                                                  suggestion ?? "";
-                                              updateProvinces();
+                                              countryValue = value;
+                                              stateValue = "";
+                                              cityValue = "";
                                             });
                                           },
-                                        ),
-                                      ),
-                                      const SizedBox(width: 20),
-                                      Expanded(
-                                        child: TypeAheadField<String?>(
-                                          textFieldConfiguration:
-                                              TextFieldConfiguration(
-                                            controller: provinceController,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Province',
-                                              border: OutlineInputBorder(),
-                                              floatingLabelBehavior:
-                                                  FloatingLabelBehavior.always,
-                                            ),
-                                          ),
-                                          suggestionsCallback: (pattern) {
-                                            return provinces
-                                                .where((province) => province
-                                                    .provinceName
-                                                    .toLowerCase()
-                                                    .contains(
-                                                        pattern.toLowerCase()))
-                                                .map((province) =>
-                                                    province.provinceName)
-                                                .toList();
-                                          },
-                                          itemBuilder:
-                                              (context, String? suggestion) {
-                                            return ListTile(
-                                              title: Text(suggestion ?? ""),
-                                            );
-                                          },
-                                          onSuggestionSelected:
-                                              (String? suggestion) {
+                                          onStateChanged: (value) {
+                                            print("Selected State: $value");
                                             setState(() {
-                                              province = suggestion;
-                                              provinceController.text =
-                                                  suggestion ?? "";
-                                              updateCities();
+                                              stateValue = value ?? "";
+                                              cityValue = "";
                                             });
                                           },
-                                        ),
-                                      ),
-                                      const SizedBox(width: 20),
-                                      Expanded(
-                                        child: TypeAheadField<String?>(
-                                          textFieldConfiguration:
-                                              TextFieldConfiguration(
-                                            controller: cityController,
-                                            decoration: const InputDecoration(
-                                              labelText: 'City / Municipality',
-                                              border: OutlineInputBorder(),
-                                              floatingLabelBehavior:
-                                                  FloatingLabelBehavior.always,
-                                            ),
-                                          ),
-                                          suggestionsCallback: (pattern) {
-                                            return cities
-                                                .where((city) => city.cityName
-                                                    .toLowerCase()
-                                                    .contains(
-                                                        pattern.toLowerCase()))
-                                                .map((city) => city.cityName)
-                                                .toList();
-                                          },
-                                          itemBuilder:
-                                              (context, String? suggestion) {
-                                            return ListTile(
-                                              title: Text(suggestion ?? ""),
-                                            );
-                                          },
-                                          onSuggestionSelected:
-                                              (String? suggestion) {
+                                          onCityChanged: (value) {
+                                            print("Selected City: $value");
                                             setState(() {
-                                              city = suggestion;
-                                              selectedCityCode = cities
-                                                  .firstWhere((city) =>
-                                                      city.cityName ==
-                                                      suggestion)
-                                                  .cityCode;
-                                              cityController.text =
-                                                  suggestion ?? "";
+                                              cityValue = value ?? "";
                                             });
                                           },
                                         ),
@@ -572,8 +545,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   // Save Button
                                   Center(
                                     child: ElevatedButton(
-                                      onPressed: () {
-                                        // Save changes action
+                                      onPressed: () async {
+                                        await updateTeacherData();
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: const Color.fromARGB(
@@ -606,17 +579,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget buildTextField(String labelText,
-      {String hintText = '', double hintFontSize = 14.0}) {
+  Widget buildTextField(
+    String labelText, {
+    String hintText = '',
+    double hintFontSize = 14.0,
+    TextEditingController? controller,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
+        controller: controller,
         decoration: InputDecoration(
           labelText: labelText,
           hintText: hintText,
           hintStyle: TextStyle(
-            color: Colors.black.withOpacity(0.5), // Set hint text opacity here
-            fontSize: hintFontSize, // Set the font size of the hint text
+            color: Colors.black.withOpacity(0.5),
+            fontSize: hintFontSize,
           ),
           floatingLabelBehavior: FloatingLabelBehavior.always,
           border: const OutlineInputBorder(),
@@ -624,60 +602,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
-    );
-  }
-}
-
-class Region {
-  final String regionCode;
-  final String regionName;
-
-  Region({required this.regionCode, required this.regionName});
-
-  factory Region.fromJson(Map<String, dynamic> json) {
-    return Region(
-      regionCode: json['region_code'],
-      regionName: json['region_name'],
-    );
-  }
-}
-
-class Province {
-  final String provinceCode;
-  final String provinceName;
-  final String regionCode;
-
-  Province({
-    required this.provinceCode,
-    required this.provinceName,
-    required this.regionCode,
-  });
-
-  factory Province.fromJson(Map<String, dynamic> json) {
-    return Province(
-      provinceCode: json['province_code'],
-      provinceName: json['province_name'],
-      regionCode: json['region_code'],
-    );
-  }
-}
-
-class City {
-  final String cityCode;
-  final String cityName;
-  final String provinceCode;
-
-  City({
-    required this.cityCode,
-    required this.cityName,
-    required this.provinceCode,
-  });
-
-  factory City.fromJson(Map<String, dynamic> json) {
-    return City(
-      cityCode: json['city_code'],
-      cityName: json['city_name'],
-      provinceCode: json['province_code'],
     );
   }
 }

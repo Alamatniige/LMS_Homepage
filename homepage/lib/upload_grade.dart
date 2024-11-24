@@ -4,6 +4,7 @@ import 'package:lms_homepage/edit_profile_page.dart';
 import 'package:lms_homepage/login_page.dart';
 import 'package:lms_homepage/main.dart';
 import 'grade_input_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UploadGradePage extends StatefulWidget {
   final String teacherId;
@@ -20,6 +21,7 @@ class _UploadGradePageState extends State<UploadGradePage> {
   bool isHoveringUpload = false;
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
+  bool isHoveringHome = false;
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +31,8 @@ class _UploadGradePageState extends State<UploadGradePage> {
           // Sidebar
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            width: 70, // Fixed width for the sidebar
-            color: const Color.fromARGB(
-                255, 44, 155, 68), // Fixed color for the sidebar
+            width: 70,
+            color: const Color.fromARGB(255, 44, 155, 68),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -47,7 +48,7 @@ class _UploadGradePageState extends State<UploadGradePage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const EditProfilePage(teacherId: ''),
+                                  EditProfilePage(teacherId: widget.teacherId),
                             ),
                           );
                         },
@@ -78,8 +79,8 @@ class _UploadGradePageState extends State<UploadGradePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const UploadGradePage(
-                                    teacherId: 'teacherId'),
+                                builder: (context) => UploadGradePage(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -122,8 +123,8 @@ class _UploadGradePageState extends State<UploadGradePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const ArchiveClassScreen(teacherId: ''),
+                                builder: (context) => ArchiveClassScreen(
+                                    teacherId: widget.teacherId),
                               ),
                             );
                           },
@@ -145,6 +146,46 @@ class _UploadGradePageState extends State<UploadGradePage> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    //Home
+                    MouseRegion(
+                      onEnter: (_) {
+                        setState(() {
+                          isHoveringHome = true;
+                        });
+                      },
+                      onExit: (_) {
+                        setState(() {
+                          isHoveringHome = false;
+                        });
+                      },
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DashboardScreen(teacherId: widget.teacherId),
+                            ),
+                          );
+                        },
+                        child: Icon(
+                          Icons.arrow_back,
+                          size: 40,
+                          color: isHoveringHome
+                              ? const Color.fromARGB(255, 255, 255, 255)
+                              : const Color.fromARGB(255, 0, 0, 0),
+                          shadows: isHoveringHome
+                              ? [
+                                  const BoxShadow(
+                                    color: Color.fromARGB(255, 69, 238, 106),
+                                    blurRadius: 10,
+                                  ),
+                                ]
+                              : [],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 Padding(
@@ -163,7 +204,13 @@ class _UploadGradePageState extends State<UploadGradePage> {
                     child: Tooltip(
                       message: 'Log Out',
                       child: GestureDetector(
-                        onTap: () {
+                        onTap: () async {
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          await prefs.clear();
+
+                          print(
+                              "User  has logged out and session data cleared.");
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -192,7 +239,6 @@ class _UploadGradePageState extends State<UploadGradePage> {
               ],
             ),
           ),
-
           // Main Content
           Expanded(
             child: Padding(
@@ -201,7 +247,7 @@ class _UploadGradePageState extends State<UploadGradePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
-                  Center(
+                  const Center(
                       child: Row(
                     mainAxisAlignment: MainAxisAlignment
                         .center, // Centers the content horizontally
@@ -247,23 +293,6 @@ class _UploadGradePageState extends State<UploadGradePage> {
                             ),
                           ],
                         ),
-                      ),
-
-                      // Back button aligned to the right
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  DashboardScreen(teacherId: widget.teacherId),
-                            ),
-                          );
-                        },
-                        color: const Color.fromRGBO(44, 155, 68, 1),
-                        tooltip: 'Go to Home',
-                        iconSize: 40,
                       ),
                     ],
                   )),
@@ -362,15 +391,4 @@ class _UploadGradePageState extends State<UploadGradePage> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      iconTheme: const IconThemeData(color: Colors.black),
-      useMaterial3: true,
-    ),
-    home: const UploadGradePage(teacherId: ''),
-  ));
 }

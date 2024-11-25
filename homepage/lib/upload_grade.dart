@@ -5,6 +5,7 @@ import 'package:lms_homepage/login_page.dart';
 import 'package:lms_homepage/main.dart';
 import 'grade_input_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UploadGradePage extends StatefulWidget {
   final String teacherId;
@@ -22,6 +23,94 @@ class _UploadGradePageState extends State<UploadGradePage> {
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
   bool isHoveringHome = false;
+  List<Map<String, dynamic>> classDataList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    print("dashboard is initialized with the ID: ${widget.teacherId}");
+    fetchClassData();
+  }
+
+  Future<void> fetchClassData() async {
+    try {
+      // Fetch the teacher's course IDs
+      final teacherCourses = await Supabase.instance.client
+          .from('teacher_courses')
+          .select('course_id')
+          .eq('teacher_id', widget.teacherId);
+
+      if (teacherCourses.isEmpty) {
+        print('No course found for the teacher.');
+        return;
+      }
+
+      // List to store all filtered class data
+      List<Map<String, dynamic>> allFilteredData = [];
+
+      // Loop through all courses associated with the teacher
+      for (var course in teacherCourses) {
+        final teacherCourseId = course['course_id'];
+
+        // Fetch course details for each course
+        final courseData = await Supabase.instance.client
+            .from('college_course')
+            .select('name, year_number, semester')
+            .eq('id', teacherCourseId)
+            .single();
+
+        if (courseData['name'] == null) {
+          print("Course not found for course_id: $teacherCourseId.");
+          continue; // Skip if course not found
+        }
+
+        final courseName = courseData['name'];
+        final courseYearNumber = courseData['year_number'];
+        final courseSemester = courseData['semester'];
+
+        // Fetch sections associated with the course
+        final data = await Supabase.instance.client.from('section').select(
+            'name, year_number, semester, college_program(name, college_department(name))');
+
+        if (data.isEmpty) {
+          print("No sections found for course_id: $teacherCourseId");
+          continue; // Skip if no sections are found
+        }
+
+        // Filter sections based on course details
+        final filteredData = data.where((item) {
+          return item['year_number'].toString().trim() ==
+                  courseYearNumber.toString().trim() &&
+              item['semester'].toString().trim() ==
+                  courseSemester.toString().trim();
+        }).map((item) {
+          return {
+            'class_name': item['name'],
+            'year_number': item['year_number'],
+            'program_name': item['college_program']['name'],
+            'department_name': item['college_program']['college_department']
+                ['name'],
+            'course_name': courseName,
+          };
+        }).toList();
+
+        // Add the filtered data for this course to the overall list
+        allFilteredData.addAll(filteredData);
+      }
+
+      if (allFilteredData.isEmpty) {
+        print('No matching classes found.');
+        return;
+      }
+
+      // Update state with all filtered class data
+      setState(() {
+        classDataList = allFilteredData;
+      });
+    } catch (e) {
+      print('Error fetching class data: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -318,15 +407,18 @@ class _UploadGradePageState extends State<UploadGradePage> {
 
                   // Class Cards for selecting courses to upload grades
                   Expanded(
-                    child: ListView(
-                      children: [
-                        classCard(
-                            "Data Structure and Algorithm", "BSIT - 2C", "203"),
-                        classCard("Project Management", "BSIT - 3D", "203"),
-                        classCard("Living in IT Era", "BSIT - 1A", "210"),
-                        classCard(
-                            "Introduction to Computing", "BSIT - 1D", "207"),
-                      ],
+                    child: ListView.builder(
+                      itemCount: classDataList.length,
+                      itemBuilder: (context, index) {
+                        final classData = classDataList[index];
+                        return classCard(
+                          classData['course_name']!, // Course Name
+                          classData['program_name']!, // Program Name
+                          classData['class_name']!, // Class Name
+                          classData['year_number']!, // Year Number
+                          classData['department_name']!, // Department Name
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -338,7 +430,8 @@ class _UploadGradePageState extends State<UploadGradePage> {
     );
   }
 
-  Widget classCard(String className, String section, String room) {
+  Widget classCard(String courseName, String programName, String className,
+      String yearNumber, String departmentName) {
     return Card(
       elevation: 3,
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
@@ -350,8 +443,9 @@ class _UploadGradePageState extends State<UploadGradePage> {
             MaterialPageRoute(
               builder: (context) => GradeInputPage(
                   className: className,
-                  section: section,
-                  room: room,
+                  yearNumber: yearNumber,
+                  progamName: programName,
+                  courseName: courseName,
                   teacherId: widget.teacherId),
             ),
           );
@@ -366,20 +460,22 @@ class _UploadGradePageState extends State<UploadGradePage> {
                   radius: 40,
                   backgroundImage: AssetImage('assets/ccst.jpg'),
                 ),
-                title: const Text(
-                  "College of Computer Studies and Technology",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-                subtitle: Column(
+                title: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Text(
-                      className,
-                      style: const TextStyle(fontSize: 10),
+                      departmentName, // Display department name
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                     Text(
-                      "$section\nRoom $room",
+                      courseName, //  Display course name
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "$programName $yearNumber$className", // Display year number and class name
                       style: const TextStyle(fontSize: 10),
                     ),
                   ],

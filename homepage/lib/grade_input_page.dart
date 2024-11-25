@@ -3,23 +3,25 @@ import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
 import 'package:lms_homepage/login_page.dart';
 import 'package:lms_homepage/upload_grade.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GradeInputPage extends StatefulWidget {
   final String teacherId;
   final String className;
-  final String section;
-  final String room;
+  final String yearNumber;
+  final String progamName;
+  final String courseName;
 
   const GradeInputPage(
       {Key? key,
       required this.className,
-      required this.section,
-      required this.room,
-      required this.teacherId})
+      required this.courseName,
+      required this.teacherId,
+      required this.yearNumber,
+      required this.progamName})
       : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _GradeInputPageState createState() => _GradeInputPageState();
 }
 
@@ -33,28 +35,82 @@ class _GradeInputPageState extends State<GradeInputPage> {
   final List<TextEditingController> _midtermGradeControllers = [];
   final List<TextEditingController> _finalsGradeControllers = [];
   final List<bool> _isLocked = [];
-  final List<bool> _isSaved = []; // Track if the grades are saved
+  final List<bool> _isSaved = [];
+  List<Map<String, dynamic>> students = [];
 
   @override
   void initState() {
     super.initState();
+    fetchStudentData(); // Fetch student data on initialization
     for (int i = 0; i < 5; i++) {
       _midtermGradeControllers.add(TextEditingController());
       _finalsGradeControllers.add(TextEditingController());
       _isLocked.add(false);
-      _isSaved.add(false); // Initialize saved state as false
+      _isSaved.add(false);
     }
   }
 
-  @override
-  void dispose() {
-    for (var controller in _midtermGradeControllers) {
-      controller.dispose();
+  Future<void> fetchStudentData() async {
+    try {
+      // Fetch the course ID based on the course name, year number, and program name
+      final courseData = await Supabase.instance.client
+          .from('college_course')
+          .select('id')
+          .eq('name', widget.courseName)
+          .single();
+
+      final courseId = courseData['id'];
+
+      // Fetch students enrolled in the selected course, including course_id
+      final studentData = await Supabase.instance.client
+          .from('student_courses')
+          .select(
+              'student_id, course_id, midterm_grade') // Include course_id here
+          .eq('course_id', courseId);
+
+      print("Fetched Student Data: $studentData");
+
+      if (studentData.isEmpty) {
+        print('No students found for this course.');
+        return;
+      }
+
+      // Fetch student details
+      List<Map<String, dynamic>> enrolledStudents = [];
+      for (var student in studentData) {
+        final studentDetails = await Supabase.instance.client
+            .from('students')
+            .select('id, first_name, last_name')
+            .eq('id', student['student_id'])
+            .single();
+
+        print("Fetched Student Details: $studentDetails");
+
+        enrolledStudents.add({
+          'student_id': studentDetails['id'],
+          'course_id': student['course_id'], // Include course_id here
+          'first_name': studentDetails['first_name'],
+          'last_name': studentDetails['last_name'],
+          'midterm_grade': student['midterm_grade'],
+        });
+
+        print("Current Enrolled Students List: $enrolledStudents");
+      }
+
+      setState(() {
+        students = enrolledStudents; // Update the state with fetched students
+        for (int i = 0; i < students.length; i++) {
+          _midtermGradeControllers.add(TextEditingController(
+              text: students[i]['midterm_grade']?.toString() ?? ''));
+          _finalsGradeControllers.add(TextEditingController());
+          _isLocked.add(false);
+          _isSaved.add(false);
+        }
+      });
+      print("Updated Students List: $students"); // Print the updated list
+    } catch (e) {
+      print('Error fetching student data: $e');
     }
-    for (var controller in _finalsGradeControllers) {
-      controller.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -238,18 +294,13 @@ class _GradeInputPageState extends State<GradeInputPage> {
                   // Header
                   Center(
                       child: Row(
-                    mainAxisAlignment: MainAxisAlignment
-                        .center, // Centers the content horizontally
-                    crossAxisAlignment: CrossAxisAlignment
-                        .center, // Vertically centers the content
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // This will center the photo and text in the row
                       const Expanded(
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment
-                              .center, // Centers photo and text
-                          crossAxisAlignment: CrossAxisAlignment
-                              .center, // Centers photo and text vertically
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             CircleAvatar(
                               radius: 26,
@@ -257,8 +308,7 @@ class _GradeInputPageState extends State<GradeInputPage> {
                             ),
                             SizedBox(width: 8),
                             Column(
-                              crossAxisAlignment: CrossAxisAlignment
-                                  .start, // Left-aligns the text
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   "Pamantasan ng Lungsod ng San Pablo",
@@ -283,8 +333,6 @@ class _GradeInputPageState extends State<GradeInputPage> {
                           ],
                         ),
                       ),
-
-                      // Back button aligned to the right
                       IconButton(
                         icon: const Icon(Icons.arrow_back),
                         onPressed: () {
@@ -306,16 +354,20 @@ class _GradeInputPageState extends State<GradeInputPage> {
 
                   // Class Details
                   Text(
-                    "${widget.className} - ${widget.section}",
+                    widget.courseName,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                    "Room: ${widget.room}",
-                    style: const TextStyle(fontSize: 18),
+                    "${widget.progamName}-${widget.yearNumber}${widget.className}",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
+
                   const SizedBox(height: 16),
 
                   // Midterm Labels
@@ -335,7 +387,7 @@ class _GradeInputPageState extends State<GradeInputPage> {
 
                   Expanded(
                     child: ListView.builder(
-                      itemCount: _midtermGradeControllers.length,
+                      itemCount: students.length,
                       itemBuilder: (context, index) {
                         return _buildStudentGradeTable(index);
                       },
@@ -347,7 +399,6 @@ class _GradeInputPageState extends State<GradeInputPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Save All Grades Button with Icon
                         ElevatedButton.icon(
                           onPressed: _saveGrades,
                           icon:
@@ -361,7 +412,6 @@ class _GradeInputPageState extends State<GradeInputPage> {
                           ),
                         ),
                         const SizedBox(width: 16),
-                        // Submit Grades Button with Icon
                         ElevatedButton.icon(
                           onPressed: _submitGrades,
                           icon:
@@ -388,6 +438,8 @@ class _GradeInputPageState extends State<GradeInputPage> {
   }
 
   Widget _buildStudentGradeTable(int index) {
+    var student = students[index];
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Table(
@@ -395,18 +447,19 @@ class _GradeInputPageState extends State<GradeInputPage> {
           TableRow(
             children: [
               // Student Image and Name
-              const Padding(
-                padding: EdgeInsets.all(8.0),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
                 child: Row(
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       radius: 20,
-                      backgroundImage: AssetImage('assets/aliceg.jpg'),
+                      backgroundImage:
+                          AssetImage('assets/aliceg.jpg'), // Placeholder image
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
-                      "Alice Guo",
-                      style: TextStyle(fontSize: 16),
+                      '${student['last_name']} ${student['first_name']}',
+                      style: const TextStyle(fontSize: 16),
                     ),
                   ],
                 ),
@@ -471,17 +524,25 @@ class _GradeInputPageState extends State<GradeInputPage> {
     );
   }
 
-  void _saveGrades() {
-    // Save the inputted grades
-    for (int i = 0; i < _midtermGradeControllers.length; i++) {
-      String midtermGrade = _midtermGradeControllers[i].text;
-      String finalsGrade = _finalsGradeControllers[i].text;
+  void _saveGrades() async {
+    print("student list: $students");
+    int minLength = _midtermGradeControllers.length < students.length
+        ? _midtermGradeControllers.length
+        : students.length;
 
-      // Mark the grade as saved
-      _isSaved[i] = true; // Mark as saved after successful input
-      // ignore: avoid_print
-      print(
-          "Saved Student ${i + 1} - Midterm: $midtermGrade, Finals: $finalsGrade");
+    for (int i = 0; i < minLength; i++) {
+      String midtermGrade = _midtermGradeControllers[i].text.trim();
+
+      var student = students[i];
+      var studentId = student['student_id'];
+      var courseId = student['course_id'];
+
+      await Supabase.instance.client.from('student_courses').upsert({
+        'student_id': studentId,
+        'course_id': courseId,
+        'midterm_grade': midtermGrade
+      }) // Use upsert to insert or update
+          .single();
     }
 
     // Show confirmation dialog for saving grades
@@ -510,7 +571,7 @@ class _GradeInputPageState extends State<GradeInputPage> {
         return AlertDialog(
           title: const Text("Confirm Submission"),
           content: const Text(
-              "Are you sure you want to submit all grades? This action cannot be undone."),
+              "Are you sure you want to submit all grades for approval? This action cannot be undone."),
           actions: [
             TextButton(
               onPressed: () {
@@ -531,12 +592,22 @@ class _GradeInputPageState extends State<GradeInputPage> {
 
     if (confirmSubmit) {
       // Proceed with grade submission if confirmed
-      setState(() {
-        for (int i = 0; i < _midtermGradeControllers.length; i++) {
-          // Lock the grades by making the input fields uneditable
-          _isLocked[i] = true;
-        }
-      });
+      for (int i = 0; i < _midtermGradeControllers.length; i++) {
+        String studentId = students[i]['student_id']; // Get student ID
+
+        // Here you can implement any logic to mark grades as submitted for approval
+        // For example, you might want to update a status field in the database
+        await Supabase.instance.client
+            .from('student_courses')
+            .update(
+                {'submitted': true}) // Assuming you have a 'submitted' field
+            .eq('student_id', studentId) // Where student_id matches
+            .single();
+
+        // Print confirmation
+        print(
+            "Submitted Student ${students[i]['first_name']} ${students[i]['last_name']} for approval.");
+      }
 
       // Show confirmation dialog for successful submission
       showDialog(
@@ -544,7 +615,8 @@ class _GradeInputPageState extends State<GradeInputPage> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text("Grades Submitted"),
-          content: const Text("All grades have been successfully submitted."),
+          content: const Text(
+              "All grades have been successfully submitted for approval."),
           actions: [
             TextButton(
               onPressed: () {

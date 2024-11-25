@@ -43,15 +43,24 @@ class _SubjectPageState extends State<SubjectPage> {
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
   bool isHoveringHome = false;
-
-  final ScrollController _scrollController = ScrollController();
+  String selectedCourseId = '';
+  bool isAddingLink = false;
   bool showLeftArrow = false;
   bool showRightArrow = true;
+  bool isLoading = true;
+
+  final ScrollController _scrollController = ScrollController();
+
+  List<Map<String, dynamic>> courses = [];
+  List<Map<String, dynamic>> modules = [];
+  List<Map<String, dynamic>> weeks = [];
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    fetchCourses();
+    fetchWeeks();
   }
 
   void _scrollListener() {
@@ -87,6 +96,53 @@ class _SubjectPageState extends State<SubjectPage> {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> fetchCourses() async {
+    final data = await Supabase.instance.client
+        .from('college_course')
+        .select('id, name');
+
+    setState(() {
+      courses = List<Map<String, dynamic>>.from(data);
+    });
+  }
+
+  Future<void> insertLinkToDatabase(
+      String moduleName, String link, String courseId, int weekId) async {
+    int? courseIdInt = int.tryParse(courseId);
+    if (courseIdInt != null) {
+      // Insert into the database
+      await Supabase.instance.client.from('modules').insert({
+        'name': moduleName,
+        'course_id': courseIdInt,
+        'url': link,
+        'teacher_id': widget.teacherId,
+        'week_id': weekId,
+      });
+
+      // Show a confirmation snackbar after saving to the database
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Module uploaded successfully!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> fetchWeeks() async {
+    final data = await Supabase.instance.client
+        .from('week')
+        .select()
+        .order('id', ascending: true);
+
+    weeks = List<Map<String, dynamic>>.from(data as List);
+    isLoading = false;
+
+    print("Fetched weeks: $weeks");
+
+    setState(() {});
   }
 
   @override
@@ -389,69 +445,72 @@ class _SubjectPageState extends State<SubjectPage> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          SizedBox(
-                            height: 120,
-                            child: Row(
-                              children: [
-                                Visibility(
-                                  visible: showLeftArrow,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.arrow_left),
-                                    iconSize: 30,
-                                    onPressed: _scrollToLeft,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    controller: _scrollController,
-                                    child: Row(
-                                      children: List.generate(9, (index) {
-                                        final week = 'Week ${index + 1}';
-                                        return Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8.0),
-                                          child: GestureDetector(
-                                            onTap: () =>
-                                                _showWeekModal(context, week),
-                                            child: Card(
-                                              elevation: 3,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              child: SizedBox(
-                                                width: 140,
-                                                height: 100,
-                                                child: Center(
-                                                  child: Text(
-                                                    week,
-                                                    style: const TextStyle(
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                          isLoading
+                              ? const CircularProgressIndicator()
+                              : SizedBox(
+                                  height: 120,
+                                  child: Row(
+                                    children: [
+                                      Visibility(
+                                        visible: showLeftArrow,
+                                        child: IconButton(
+                                          icon: const Icon(Icons.arrow_left),
+                                          iconSize: 30,
+                                          onPressed: _scrollToLeft,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          controller: _scrollController,
+                                          child: Row(
+                                            children: weeks.map((week) {
+                                              return Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8.0),
+                                                child: GestureDetector(
+                                                  onTap: () => _showWeekModal(
+                                                      context, week['name']),
+                                                  child: Card(
+                                                    elevation: 3,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                    child: SizedBox(
+                                                      width: 140,
+                                                      height: 100,
+                                                      child: Center(
+                                                        child: Text(
+                                                          week['name'],
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                            ),
+                                              );
+                                            }).toList(),
                                           ),
-                                        );
-                                      }),
-                                    ),
+                                        ),
+                                      ),
+                                      if (showRightArrow)
+                                        IconButton(
+                                          icon: const Icon(Icons.arrow_right),
+                                          iconSize: 30,
+                                          onPressed: _scrollToRight,
+                                        ),
+                                    ],
                                   ),
                                 ),
-                                Visibility(
-                                  visible: showRightArrow,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.arrow_right),
-                                    iconSize: 30,
-                                    onPressed: _scrollToRight,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                           const SizedBox(height: 20),
                           // Input Bar for Teacher to Upload Activity/Announcement
                           GestureDetector(
@@ -616,86 +675,8 @@ class _SubjectPageState extends State<SubjectPage> {
   }
 
   void _showWeekModal(BuildContext context, String week) {
-    List<Map<String, String>> modules = [];
     final TextEditingController moduleNameController = TextEditingController();
     final TextEditingController linkController = TextEditingController();
-    String selectedCourseId = ''; // To keep track of selected course ID
-    bool isAddingLink = false;
-
-    // Sample course data for suggestions
-    final List<Map<String, String>> courses = [
-      {'id': '1', 'title': 'Mathematics'},
-      {'id': '2', 'title': 'Science'},
-      {'id': '3', 'title': 'History'},
-      {'id': '4', 'title': 'Geography'},
-      {'id': '5', 'title': 'Literature'},
-      {'id': '6', 'title': 'Art'},
-      {'id': '7', 'title': 'Music'},
-      {'id': '8', 'title': 'Physical Education'},
-      {'id': '9', 'title': 'Computer Science'},
-    ];
-
-    Future<void> insertLinkToDatabase(
-        String moduleName, String link, String courseId) async {
-      if (widget.teacherId.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Teacher ID is required.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        return;
-      }
-
-      int? teacherIdInt = int.tryParse(widget.teacherId);
-      if (teacherIdInt == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid Teacher ID.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        return;
-      }
-
-      int? courseIdInt = int.tryParse(courseId);
-      if (courseIdInt == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid Course ID.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        return;
-      }
-
-      try {
-        final response = await Supabase.instance.client.from('modules').insert({
-          'name': moduleName,
-          'course_id': courseIdInt,
-          'url': link,
-        });
-
-        if (response != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Module uploaded successfully!'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-
-          // Add the module to the displayed list
-          modules.add({'name': moduleName, 'url': link, 'course_id': courseId});
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error uploading module: ${e.toString()}'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    }
 
     showDialog(
       context: context,
@@ -749,8 +730,8 @@ class _SubjectPageState extends State<SubjectPage> {
                         hint: const Text('Select Course ID'),
                         items: courses.map((course) {
                           return DropdownMenuItem<String>(
-                            value: course['id'],
-                            child: Text(course['title']!),
+                            value: course['id'].toString(),
+                            child: Text(course['name']),
                           );
                         }).toList(),
                         onChanged: (value) {
@@ -764,10 +745,14 @@ class _SubjectPageState extends State<SubjectPage> {
                           if (moduleNameController.text.isNotEmpty &&
                               linkController.text.isNotEmpty &&
                               selectedCourseId.isNotEmpty) {
+                            int weekId =
+                                weeks.indexOf(week as Map<String, dynamic>) +
+                                    1; // Get the current week ID
                             insertLinkToDatabase(
                               moduleNameController.text,
                               linkController.text,
                               selectedCourseId,
+                              weekId, // Pass the weekId here
                             );
                             moduleNameController.clear();
                             linkController.clear();
@@ -791,7 +776,8 @@ class _SubjectPageState extends State<SubjectPage> {
                       return ListTile(
                         title: Text(module['name']!),
                         subtitle: Text(module['url']!),
-                        trailing: Text('Course ID: ${module['course_id']}'),
+                        trailing: Text(
+                            'Course ID: ${module['course_id']} - Week: ${module['week']}'),
                       );
                     }).toList(),
                   ],

@@ -255,7 +255,7 @@ class _UploadGradePageState extends State<UploadGradePage> {
                         .center, // Vertically centers the content
                     children: [
                       // This will center the photo and text in the row
-                      const Expanded(
+                      Expanded(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment
                               .center, // Centers photo and text

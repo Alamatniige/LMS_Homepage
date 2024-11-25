@@ -1,5 +1,4 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/login_page.dart';
@@ -8,6 +7,8 @@ import 'package:lms_homepage/upload_grade.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:csc_picker/csc_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class EditProfilePage extends StatefulWidget {
   final String teacherId;
@@ -31,6 +32,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String? countryValue;
   String? stateValue;
   String? cityValue;
+  File? _imageFile;
 
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController middleNameController = TextEditingController();
@@ -93,6 +95,49 @@ class _EditProfilePageState extends State<EditProfilePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile updated successfully!')),
     );
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _imageFile = File(image.path);
+      });
+
+      // Upload the image to Supabase storage
+      await _uploadImageToSupabase(image);
+    }
+  }
+
+  Future<void> _uploadImageToSupabase(XFile image) async {
+    final fileName =
+        'profile/${widget.teacherId}/${image.name}'; // File path in storage
+    final response = await Supabase.instance.client.storage
+        .from('profile')
+        .upload(fileName, File(image.path));
+
+    // ignore: unnecessary_null_comparison
+    if (response == null) {
+      // Get the public URL of the uploaded image
+      final publicUrl = Supabase.instance.client.storage
+          .from('profile')
+          .getPublicUrl(fileName);
+
+      // Update the teacher's profile picture URL in the database
+      await Supabase.instance.client.from('teacher').update({
+        'profilepicture': publicUrl,
+      }).eq('id', widget.teacherId);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile picture updated successfully!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error uploading image: $response')),
+      );
+    }
   }
 
   @override
@@ -391,10 +436,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   // Profile Picture Section
                                   Column(
                                     children: [
-                                      const CircleAvatar(
+                                      CircleAvatar(
                                         radius: 50,
-                                        backgroundImage:
-                                            AssetImage('assets/aliceg.jpg'),
+                                        backgroundImage: _imageFile != null
+                                            ? FileImage(_imageFile!)
+                                            : const AssetImage(
+                                                    'assets/aliceg.jpg')
+                                                as ImageProvider,
                                       ),
                                       Text(
                                         "Good day! ${lastNameController.text}, ${firstNameController.text}",
@@ -404,9 +452,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                       ),
                                       const SizedBox(height: 5),
                                       ElevatedButton(
-                                        onPressed: () {
-                                          // Change picture action
-                                        },
+                                        onPressed:
+                                            _pickImage, // Call the image picker
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: const Color.fromARGB(
                                               255, 255, 255, 255),

@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:lms_homepage/archive_class.dart';
 import 'package:lms_homepage/edit_profile_page.dart';
@@ -5,6 +6,7 @@ import 'package:lms_homepage/login_page.dart';
 import 'package:lms_homepage/subject_page.dart';
 import 'package:lms_homepage/upload_grade.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CreatePostPage extends StatefulWidget {
   final String teacherId;
@@ -38,6 +40,106 @@ class _CreatePostPageState extends State<CreatePostPage> {
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
   bool isHoveringHome = false;
+  int selectedCourseId = -1;
+  DateTime? selectedDueDate;
+  String driveUrl = '';
+  String youtubeUrl = '';
+  String externalUrl = '';
+  bool isDriveSet = false;
+  bool isYoutubeSet = false;
+  bool isUrlSet = false;
+  bool isDueDateSet = false;
+
+  final TextEditingController _controller = TextEditingController();
+  List<Map<String, dynamic>> courses = [];
+
+  @override
+  @override
+  void initState() {
+    super.initState();
+    fetchCourses();
+  }
+
+  Future<void> fetchCourses() async {
+    try {
+      final data = await Supabase.instance.client
+          .from('college_course')
+          .select('id, name')
+          .eq('name', widget.programName);
+
+      setState(() {
+        courses = List<Map<String, dynamic>>.from(data);
+
+        if (courses.isNotEmpty) {
+          selectedCourseId = courses.first['id'];
+          print("Selected Course ID: $selectedCourseId");
+        } else {
+          selectedCourseId = -1;
+          print("No course found matching the name: ${widget.programName}");
+        }
+      });
+    } catch (e) {
+      print("Error fetching courses: $e");
+      setState(() {
+        selectedCourseId = -1;
+      });
+    }
+  }
+
+  Future<void> postActivity() async {
+    if (_controller.text.isEmpty || selectedCourseId == -1) {
+      print("No input or course selected");
+      return;
+    }
+
+    if (selectedDueDate == null) {
+      print("Please select a due date");
+      setState(() {
+        isDueDateSet = false; // Reset the due date indicator
+      });
+      return;
+    }
+
+    await Supabase.instance.client.from('tasks').insert({
+      'description': _controller.text,
+      'course_id': selectedCourseId,
+      'due_date': selectedDueDate?.toIso8601String(),
+      'drive': driveUrl.isNotEmpty ? driveUrl : null,
+      'youtube': youtubeUrl.isNotEmpty ? youtubeUrl : null,
+      'url': externalUrl.isNotEmpty ? externalUrl : null,
+    });
+
+    setState(() {
+      // Resetting after successful posting
+      _controller.clear();
+      selectedDueDate = null;
+      driveUrl = '';
+      youtubeUrl = '';
+      externalUrl = '';
+      isDriveSet = driveUrl.isNotEmpty;
+      isYoutubeSet = youtubeUrl.isNotEmpty;
+      isUrlSet = externalUrl.isNotEmpty;
+      isDueDateSet = selectedDueDate != null;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Activity posted successfully!')),
+    );
+  }
+
+  Future<void> selectDueDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDueDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != selectedDueDate) {
+      setState(() {
+        selectedDueDate = picked;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -339,6 +441,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         Stack(
                           children: [
                             TextField(
+                              controller: _controller,
                               decoration: InputDecoration(
                                 labelText: 'Post an Activity or Announcement',
                                 border: OutlineInputBorder(
@@ -366,37 +469,248 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            IconButton(
-                              icon: Image.asset(
-                                'assets/gdrive.png',
-                                width: 40,
-                                height: 40,
+                            Tooltip(
+                              message: 'Google Drive',
+                              child: Stack(
+                                children: [
+                                  IconButton(
+                                    icon: Image.asset(
+                                      'assets/gdrive.png',
+                                      width: 40,
+                                      height: 40,
+                                    ),
+                                    onPressed: () async {
+                                      // Open Google Drive URL picker (or implementation)
+                                      String? selectedDriveUrl =
+                                          await showDialog<String>(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: const Text(
+                                                'Enter Google Drive URL'),
+                                            content: TextField(
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  driveUrl = value;
+                                                  isDriveSet = value.isNotEmpty;
+                                                });
+                                              },
+                                              decoration: const InputDecoration(
+                                                  hintText: "Drive URL"),
+                                            ),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(context, ''),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, driveUrl),
+                                                child: const Text('OK'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                      if (selectedDriveUrl != null &&
+                                          selectedDriveUrl.isNotEmpty) {
+                                        setState(() {
+                                          driveUrl = selectedDriveUrl;
+                                          isDriveSet = true;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  if (isDriveSet)
+                                    const Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green,
+                                        size: 18,
+                                      ),
+                                    ),
+                                ],
                               ),
-                              onPressed: () {
-                                // Implement Google Drive functionality
-                              },
                             ),
-                            IconButton(
-                              icon: Image.asset(
-                                'assets/yt.png',
-                                width: 40,
-                                height: 40,
+                            Tooltip(
+                              message: 'YouTube',
+                              child: Stack(
+                                children: [
+                                  IconButton(
+                                    icon: Image.asset(
+                                      'assets/yt.png',
+                                      width: 40,
+                                      height: 40,
+                                    ),
+                                    onPressed: () async {
+                                      // Open YouTube URL picker (or implementation)
+                                      String? selectedYoutubeUrl =
+                                          await showDialog<String>(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title:
+                                                const Text('Enter YouTube URL'),
+                                            content: TextField(
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  youtubeUrl = value;
+                                                  isYoutubeSet =
+                                                      value.isNotEmpty;
+                                                });
+                                              },
+                                              decoration: const InputDecoration(
+                                                  hintText: "YouTube URL"),
+                                            ),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(context, ''),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, youtubeUrl),
+                                                child: const Text('OK'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                      if (selectedYoutubeUrl != null &&
+                                          selectedYoutubeUrl.isNotEmpty) {
+                                        setState(() {
+                                          youtubeUrl = selectedYoutubeUrl;
+                                          isYoutubeSet = true;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  if (isYoutubeSet)
+                                    const Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green,
+                                        size: 18,
+                                      ),
+                                    ),
+                                ],
                               ),
-                              onPressed: () {
-                                // Implement YouTube functionality
-                              },
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.upload_file, size: 30),
-                              onPressed: () {
-                                // Implement file upload functionality
-                              },
+                            Tooltip(
+                              message: 'Link',
+                              child: Stack(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.link, size: 30),
+                                    onPressed: () async {
+                                      // Open URL picker
+                                      String? selectedUrl =
+                                          await showDialog<String>(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: const Text('Enter Link'),
+                                            content: TextField(
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  externalUrl = value;
+                                                  isUrlSet = value.isNotEmpty;
+                                                });
+                                              },
+                                              decoration: const InputDecoration(
+                                                  hintText: "Enter URL"),
+                                            ),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(context, ''),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, externalUrl),
+                                                child: const Text('OK'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                      if (selectedUrl != null &&
+                                          selectedUrl.isNotEmpty) {
+                                        setState(() {
+                                          externalUrl = selectedUrl;
+                                          isUrlSet = true;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  if (isUrlSet)
+                                    const Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green,
+                                        size: 18,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.link, size: 30),
-                              onPressed: () {
-                                // Implement link functionality
-                              },
+                            Tooltip(
+                              message: 'Upload File',
+                              child: IconButton(
+                                icon: const Icon(Icons.upload_file, size: 30),
+                                onPressed: () {
+                                  // Implement file upload functionality
+                                },
+                              ),
+                            ),
+                            Tooltip(
+                              message: 'Due Date',
+                              child: Stack(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.calendar_today,
+                                        size: 25),
+                                    onPressed: () async {
+                                      // Open Date picker
+                                      DateTime? pickedDate =
+                                          await showDatePicker(
+                                        context: context,
+                                        initialDate:
+                                            selectedDueDate ?? DateTime.now(),
+                                        firstDate: DateTime(2000),
+                                        lastDate: DateTime(2101),
+                                      );
+                                      if (pickedDate != null &&
+                                          pickedDate != selectedDueDate) {
+                                        setState(() {
+                                          selectedDueDate = pickedDate;
+                                          isDueDateSet =
+                                              selectedDueDate != null;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  if (isDueDateSet)
+                                    const Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: const Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green,
+                                        size: 18,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -407,10 +721,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: ElevatedButton(
-                            onPressed: () {
-                              // Implement publish functionality
-                              // You can use widget.teacherId here if needed
-                            },
+                            onPressed: postActivity,
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                   vertical: 10, horizontal: 20),
@@ -436,6 +747,96 @@ class _CreatePostPageState extends State<CreatePostPage> {
           ),
         ],
       ),
+    );
+  }
+
+  void setDriveUrl() {
+    // Prompt user to input the Google Drive link
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController driveController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Enter Google Drive URL'),
+          content: TextField(
+            controller: driveController,
+            decoration: const InputDecoration(
+              hintText: 'Paste the Google Drive URL here...',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  driveUrl = driveController.text;
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Set'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void setYoutubeUrl() {
+    // Prompt user to input the YouTube URL
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController youtubeController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Enter YouTube URL'),
+          content: TextField(
+            controller: youtubeController,
+            decoration: const InputDecoration(
+              hintText: 'Paste the YouTube URL here...',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  youtubeUrl = youtubeController.text;
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Set'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void setExternalUrl() {
+    // Prompt user to input the external URL
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController urlController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Enter External URL'),
+          content: TextField(
+            controller: urlController,
+            decoration: const InputDecoration(
+              hintText: 'Paste the URL here...',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  externalUrl = urlController.text;
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Set'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

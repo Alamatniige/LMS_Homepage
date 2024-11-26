@@ -1,5 +1,4 @@
 // ignore_for_file: avoid_print, use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:lms_homepage/activity_details.dart';
 import 'package:lms_homepage/archive_class.dart';
@@ -43,7 +42,7 @@ class _SubjectPageState extends State<SubjectPage> {
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
   bool isHoveringHome = false;
-  String selectedCourseId = '';
+  int selectedCourseId = -1;
   bool isAddingLink = false;
   bool showLeftArrow = false;
   bool showRightArrow = true;
@@ -98,37 +97,22 @@ class _SubjectPageState extends State<SubjectPage> {
     super.dispose();
   }
 
-  Future<void> fetchCourses() async {
-    final data = await Supabase.instance.client
-        .from('college_course')
-        .select('id, name');
-
-    setState(() {
-      courses = List<Map<String, dynamic>>.from(data);
-    });
-  }
-
   Future<void> insertLinkToDatabase(
-      String moduleName, String link, String courseId, int weekId) async {
-    int? courseIdInt = int.tryParse(courseId);
-    if (courseIdInt != null) {
-      // Insert into the database
-      await Supabase.instance.client.from('modules').insert({
-        'name': moduleName,
-        'course_id': courseIdInt,
-        'url': link,
-        'teacher_id': widget.teacherId,
-        'week_id': weekId,
-      });
+      String moduleName, String link, int courseId, int weekId) async {
+    await Supabase.instance.client.from('modules').insert({
+      'name': moduleName,
+      'course_id': courseId,
+      'url': link,
+      'teacher_id': widget.teacherId,
+      'week': weekId,
+    });
 
-      // Show a confirmation snackbar after saving to the database
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Module uploaded successfully!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Module uploaded successfully!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> fetchWeeks() async {
@@ -140,9 +124,74 @@ class _SubjectPageState extends State<SubjectPage> {
     weeks = List<Map<String, dynamic>>.from(data as List);
     isLoading = false;
 
-    print("Fetched weeks: $weeks");
-
     setState(() {});
+  }
+
+  Future<void> fetchCourses() async {
+    try {
+      final data = await Supabase.instance.client
+          .from('college_course')
+          .select('id, name')
+          .eq('name', widget.programName);
+
+      setState(() {
+        courses = List<Map<String, dynamic>>.from(data);
+
+        if (courses.isNotEmpty) {
+          selectedCourseId = courses.first['id'];
+          print("Selected Course ID: $selectedCourseId");
+        } else {
+          selectedCourseId = -1;
+          print("No course found matching the name: ${widget.programName}");
+        }
+      });
+    } catch (e) {
+      print("Error fetching courses: $e");
+      setState(() {
+        selectedCourseId = -1;
+      });
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchModules(String weekName) async {
+    if (selectedCourseId == -1) {
+      print("Invalid Course ID. Cannot fetch modules.");
+      return [];
+    }
+
+    try {
+      int weekId = weeks.indexWhere((week) => week['name'] == weekName) + 1;
+
+      final data = await Supabase.instance.client
+          .from('modules')
+          .select('name, url, course_id, week')
+          .eq('teacher_id', widget.teacherId)
+          .eq('course_id', selectedCourseId)
+          .eq('week', weekId);
+
+      setState(() {
+        modules = List<Map<String, dynamic>>.from(data);
+      });
+      return modules;
+    } catch (e) {
+      print("Error fetching modules: $e");
+      setState(() {
+        modules = [];
+      });
+      return [];
+    }
+  }
+
+  void selectCourse(int courseId) {
+    setState(() {
+      selectedCourseId = courseId;
+    });
+
+    print("Selected Course ID: $courseId");
+
+    if (weeks.isNotEmpty) {
+      fetchModules(weeks.first['name']);
+    }
   }
 
   @override
@@ -678,11 +727,13 @@ class _SubjectPageState extends State<SubjectPage> {
     final TextEditingController moduleNameController = TextEditingController();
     final TextEditingController linkController = TextEditingController();
 
+    fetchModules(week);
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, dialogSetState) {
             return AlertDialog(
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 50),
@@ -698,103 +749,136 @@ class _SubjectPageState extends State<SubjectPage> {
                   IconButton(
                     icon: const Icon(Icons.add, color: Colors.grey),
                     onPressed: () {
-                      setState(() {
+                      dialogSetState(() {
                         isAddingLink = !isAddingLink;
                       });
                     },
                   ),
                 ],
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (isAddingLink) ...[
-                      TextField(
-                        controller: moduleNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Enter Module Name',
-                          border: OutlineInputBorder(),
-                        ),
+              content: StreamBuilder<List<Map<String, dynamic>>>(
+                stream: Stream.fromFuture(fetchModules(week)),
+                builder: (context, snapshot) {
+                  // Check connection state
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Loading modules...'),
+                        ],
                       ),
-                      TextField(
-                        controller: linkController,
-                        decoration: const InputDecoration(
-                          labelText: 'Enter Module Link',
-                          border: OutlineInputBorder(),
-                        ),
+                    );
+                  }
+
+                  // Check if data is available
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (isAddingLink)
+                            _buildAddModuleSection(context, dialogSetState,
+                                moduleNameController, linkController, week),
+                          const SizedBox(height: 20),
+                          const Center(child: Text('No modules uploaded yet')),
+                        ],
                       ),
-                      DropdownButton<String>(
-                        value:
-                            selectedCourseId.isEmpty ? null : selectedCourseId,
-                        hint: const Text('Select Course ID'),
-                        items: courses.map((course) {
-                          return DropdownMenuItem<String>(
-                            value: course['id'].toString(),
-                            child: Text(course['name']),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedCourseId = value!;
-                          });
-                        },
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (moduleNameController.text.isNotEmpty &&
-                              linkController.text.isNotEmpty &&
-                              selectedCourseId.isNotEmpty) {
-                            int weekId =
-                                weeks.indexOf(week as Map<String, dynamic>) +
-                                    1; // Get the current week ID
-                            insertLinkToDatabase(
-                              moduleNameController.text,
-                              linkController.text,
-                              selectedCourseId,
-                              weekId, // Pass the weekId here
+                    );
+                  }
+
+                  // Data is available
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (isAddingLink)
+                          _buildAddModuleSection(context, dialogSetState,
+                              moduleNameController, linkController, week),
+                        const SizedBox(height: 20),
+                        const Text('Uploaded Modules:',
+                            style: TextStyle(fontSize: 18)),
+                        Column(
+                          children: snapshot.data!.map((module) {
+                            return ListTile(
+                              title: Text(module['name']!),
+                              subtitle: Text(module['url']!),
+                              trailing: Text(
+                                  'Course ID: ${module['course_id'] ?? 'N/A'}'),
                             );
-                            moduleNameController.clear();
-                            linkController.clear();
-                            selectedCourseId = '';
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please fill all fields.'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text('Save Module'),
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    const Text('Uploaded Modules:',
-                        style: TextStyle(fontSize: 18)),
-                    ...modules.map((module) {
-                      return ListTile(
-                        title: Text(module['name']!),
-                        subtitle: Text(module['url']!),
-                        trailing: Text(
-                            'Course ID: ${module['course_id']} - Week: ${module['week']}'),
-                      );
-                    }).toList(),
-                  ],
-                ),
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Close'),
-                ),
-              ],
             );
           },
         );
       },
+    );
+  }
+
+  Widget _buildAddModuleSection(
+      BuildContext context,
+      StateSetter dialogSetState,
+      TextEditingController moduleNameController,
+      TextEditingController linkController,
+      String week) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: moduleNameController,
+          decoration: const InputDecoration(
+            labelText: 'Enter Module Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        TextField(
+          controller: linkController,
+          decoration: const InputDecoration(
+            labelText: 'Enter Module Link',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        Text(
+          'Course: ${courses.firstWhere((course) => course['id'] == selectedCourseId)['name']}',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (moduleNameController.text.isNotEmpty &&
+                linkController.text.isNotEmpty &&
+                selectedCourseId != -1) {
+              int weekId = weeks.indexWhere((w) => w['name'] == week) + 1;
+
+              insertLinkToDatabase(
+                moduleNameController.text,
+                linkController.text,
+                selectedCourseId,
+                weekId,
+              );
+              moduleNameController.clear();
+              linkController.clear();
+
+              // Refresh modules
+              fetchModules(week);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please fill all fields.'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+          child: const Text('Save Module'),
+        ),
+      ],
     );
   }
 }

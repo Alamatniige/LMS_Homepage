@@ -5,6 +5,7 @@ import 'package:lms_homepage/login_page.dart';
 import 'package:lms_homepage/subject_page.dart';
 import 'package:lms_homepage/upload_grade.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ActivityDetailsPage extends StatefulWidget {
   final String teacherId;
@@ -38,8 +39,11 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
   bool isHoveringUpload = false;
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
+  int selectedCourseId = -1;
 
-  // Mock data for graded, missing, and submitted students
+  List<Map<String, dynamic>> tasks = [];
+  List<Map<String, dynamic>> courses = [];
+
   final List<String> gradedStudents = [
     'Student 1',
     'Student 2',
@@ -58,6 +62,57 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
     'Student 11',
     'Student 12'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCourses().then((_) {
+      if (selectedCourseId != -1) {
+        fetchTasks();
+      }
+    });
+  }
+
+  Future<void> fetchCourses() async {
+    try {
+      final data = await Supabase.instance.client
+          .from('college_course')
+          .select('id, name')
+          .eq('name', widget.programName);
+
+      setState(() {
+        courses = List<Map<String, dynamic>>.from(data);
+
+        if (courses.isNotEmpty) {
+          selectedCourseId = courses.first['id'];
+          print("Selected Course ID: $selectedCourseId");
+        } else {
+          selectedCourseId = -1;
+          print("No course found matching the name: ${widget.programName}");
+        }
+      });
+    } catch (e) {
+      print("Error fetching courses: $e");
+      setState(() {
+        selectedCourseId = -1;
+      });
+    }
+  }
+
+  Future<void> fetchTasks() async {
+    try {
+      final taskData = await Supabase.instance.client
+          .from('tasks')
+          .select('id, description, url, drive, youtube, due_date')
+          .eq('course_id', selectedCourseId);
+
+      setState(() {
+        tasks = List<Map<String, dynamic>>.from(taskData);
+      });
+    } catch (e) {
+      print("Error fetching tasks: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -364,13 +419,11 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Activity description
-                        const Text(
-                          "This is a detailed description of the activity. It provides information about the requirements and expectations.",
-                          style: TextStyle(fontSize: 16),
+                        Text(
+                          task['description'] ?? 'No description available',
+                          style: const TextStyle(fontSize: 16),
                         ),
                         const SizedBox(height: 20),
-
-                        // Attached Document/Link Area
                         const Text(
                           "Attached Document/Links:",
                           style: TextStyle(
@@ -379,13 +432,24 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
                         const SizedBox(height: 10),
                         GestureDetector(
                           onTap: () {
-                            // Add functionality for document/link
+                            // Handle document/link click
+                            print(
+                                "Document Link: ${task['url'] ?? task['drive'] ?? task['youtube']}");
                           },
-                          child: const Text(
-                            "Activity_Details.pdf",
-                            style: TextStyle(color: Colors.blue),
+                          child: Text(
+                            task['url'] ??
+                                task['drive'] ??
+                                task['youtube'] ??
+                                'No link available',
+                            style: const TextStyle(color: Colors.blue),
                           ),
                         ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Due Date: ${task['due_date'] != null ? task['due_date'] : 'No due date available'}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const Divider(),
                         const SizedBox(height: 20),
 
                         // Grid Layout for Submission Status

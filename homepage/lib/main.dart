@@ -450,7 +450,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                     Text(
-                      programName, // Display course name
+                      programName, //  Display course name
                       style: const TextStyle(fontSize: 12),
                     ),
                     const SizedBox(height: 4),

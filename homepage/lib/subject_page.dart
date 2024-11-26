@@ -1,5 +1,4 @@
 // ignore_for_file: avoid_print, use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:lms_homepage/activity_details.dart';
 import 'package:lms_homepage/archive_class.dart';
@@ -43,15 +42,24 @@ class _SubjectPageState extends State<SubjectPage> {
   bool isHoveringArchive = false;
   bool isHoveringLogout = false;
   bool isHoveringHome = false;
-
-  final ScrollController _scrollController = ScrollController();
+  int selectedCourseId = -1;
+  bool isAddingLink = false;
   bool showLeftArrow = false;
   bool showRightArrow = true;
+  bool isLoading = true;
+
+  final ScrollController _scrollController = ScrollController();
+
+  List<Map<String, dynamic>> courses = [];
+  List<Map<String, dynamic>> modules = [];
+  List<Map<String, dynamic>> weeks = [];
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    fetchCourses();
+    fetchWeeks();
   }
 
   void _scrollListener() {
@@ -87,6 +95,103 @@ class _SubjectPageState extends State<SubjectPage> {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> insertLinkToDatabase(
+      String moduleName, String link, int courseId, int weekId) async {
+    await Supabase.instance.client.from('modules').insert({
+      'name': moduleName,
+      'course_id': courseId,
+      'url': link,
+      'teacher_id': widget.teacherId,
+      'week': weekId,
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Module uploaded successfully!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> fetchWeeks() async {
+    final data = await Supabase.instance.client
+        .from('week')
+        .select()
+        .order('id', ascending: true);
+
+    weeks = List<Map<String, dynamic>>.from(data as List);
+    isLoading = false;
+
+    setState(() {});
+  }
+
+  Future<void> fetchCourses() async {
+    try {
+      final data = await Supabase.instance.client
+          .from('college_course')
+          .select('id, name')
+          .eq('name', widget.programName);
+
+      setState(() {
+        courses = List<Map<String, dynamic>>.from(data);
+
+        if (courses.isNotEmpty) {
+          selectedCourseId = courses.first['id'];
+          print("Selected Course ID: $selectedCourseId");
+        } else {
+          selectedCourseId = -1;
+          print("No course found matching the name: ${widget.programName}");
+        }
+      });
+    } catch (e) {
+      print("Error fetching courses: $e");
+      setState(() {
+        selectedCourseId = -1;
+      });
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchModules(String weekName) async {
+    if (selectedCourseId == -1) {
+      print("Invalid Course ID. Cannot fetch modules.");
+      return [];
+    }
+
+    try {
+      int weekId = weeks.indexWhere((week) => week['name'] == weekName) + 1;
+
+      final data = await Supabase.instance.client
+          .from('modules')
+          .select('name, url, course_id, week')
+          .eq('teacher_id', widget.teacherId)
+          .eq('course_id', selectedCourseId)
+          .eq('week', weekId);
+
+      setState(() {
+        modules = List<Map<String, dynamic>>.from(data);
+      });
+      return modules;
+    } catch (e) {
+      print("Error fetching modules: $e");
+      setState(() {
+        modules = [];
+      });
+      return [];
+    }
+  }
+
+  void selectCourse(int courseId) {
+    setState(() {
+      selectedCourseId = courseId;
+    });
+
+    print("Selected Course ID: $courseId");
+
+    if (weeks.isNotEmpty) {
+      fetchModules(weeks.first['name']);
+    }
   }
 
   @override
@@ -389,69 +494,72 @@ class _SubjectPageState extends State<SubjectPage> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          SizedBox(
-                            height: 120,
-                            child: Row(
-                              children: [
-                                Visibility(
-                                  visible: showLeftArrow,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.arrow_left),
-                                    iconSize: 30,
-                                    onPressed: _scrollToLeft,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    controller: _scrollController,
-                                    child: Row(
-                                      children: List.generate(9, (index) {
-                                        final week = 'Week ${index + 1}';
-                                        return Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8.0),
-                                          child: GestureDetector(
-                                            onTap: () =>
-                                                _showWeekModal(context, week),
-                                            child: Card(
-                                              elevation: 3,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              child: SizedBox(
-                                                width: 140,
-                                                height: 100,
-                                                child: Center(
-                                                  child: Text(
-                                                    week,
-                                                    style: const TextStyle(
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                          isLoading
+                              ? const CircularProgressIndicator()
+                              : SizedBox(
+                                  height: 120,
+                                  child: Row(
+                                    children: [
+                                      Visibility(
+                                        visible: showLeftArrow,
+                                        child: IconButton(
+                                          icon: const Icon(Icons.arrow_left),
+                                          iconSize: 30,
+                                          onPressed: _scrollToLeft,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          controller: _scrollController,
+                                          child: Row(
+                                            children: weeks.map((week) {
+                                              return Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8.0),
+                                                child: GestureDetector(
+                                                  onTap: () => _showWeekModal(
+                                                      context, week['name']),
+                                                  child: Card(
+                                                    elevation: 3,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                    child: SizedBox(
+                                                      width: 140,
+                                                      height: 100,
+                                                      child: Center(
+                                                        child: Text(
+                                                          week['name'],
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                            ),
+                                              );
+                                            }).toList(),
                                           ),
-                                        );
-                                      }),
-                                    ),
+                                        ),
+                                      ),
+                                      if (showRightArrow)
+                                        IconButton(
+                                          icon: const Icon(Icons.arrow_right),
+                                          iconSize: 30,
+                                          onPressed: _scrollToRight,
+                                        ),
+                                    ],
                                   ),
                                 ),
-                                Visibility(
-                                  visible: showRightArrow,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.arrow_right),
-                                    iconSize: 30,
-                                    onPressed: _scrollToRight,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                           const SizedBox(height: 20),
                           // Input Bar for Teacher to Upload Activity/Announcement
                           GestureDetector(
@@ -616,92 +724,16 @@ class _SubjectPageState extends State<SubjectPage> {
   }
 
   void _showWeekModal(BuildContext context, String week) {
-    List<Map<String, String>> modules = [];
     final TextEditingController moduleNameController = TextEditingController();
     final TextEditingController linkController = TextEditingController();
-    String selectedCourseId = ''; // To keep track of selected course ID
-    bool isAddingLink = false;
 
-    // Sample course data for suggestions
-    final List<Map<String, String>> courses = [
-      {'id': '1', 'title': 'Mathematics'},
-      {'id': '2', 'title': 'Science'},
-      {'id': '3', 'title': 'History'},
-      {'id': '4', 'title': 'Geography'},
-      {'id': '5', 'title': 'Literature'},
-      {'id': '6', 'title': 'Art'},
-      {'id': '7', 'title': 'Music'},
-      {'id': '8', 'title': 'Physical Education'},
-      {'id': '9', 'title': 'Computer Science'},
-    ];
-
-    Future<void> insertLinkToDatabase(
-        String moduleName, String link, String courseId) async {
-      if (widget.teacherId.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Teacher ID is required.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        return;
-      }
-
-      int? teacherIdInt = int.tryParse(widget.teacherId);
-      if (teacherIdInt == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid Teacher ID.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        return;
-      }
-
-      int? courseIdInt = int.tryParse(courseId);
-      if (courseIdInt == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid Course ID.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        return;
-      }
-
-      try {
-        final response = await Supabase.instance.client.from('modules').insert({
-          'name': moduleName,
-          'course_id': courseIdInt,
-          'url': link,
-        });
-
-        if (response != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Module uploaded successfully!'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-
-          // Add the module to the displayed list
-          modules.add({'name': moduleName, 'url': link, 'course_id': courseId});
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error uploading module: ${e.toString()}'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    }
+    fetchModules(week);
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, dialogSetState) {
             return AlertDialog(
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 50),
@@ -717,98 +749,136 @@ class _SubjectPageState extends State<SubjectPage> {
                   IconButton(
                     icon: const Icon(Icons.add, color: Colors.grey),
                     onPressed: () {
-                      setState(() {
+                      dialogSetState(() {
                         isAddingLink = !isAddingLink;
                       });
                     },
                   ),
                 ],
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (isAddingLink) ...[
-                      TextField(
-                        controller: moduleNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Enter Module Name',
-                          border: OutlineInputBorder(),
-                        ),
+              content: StreamBuilder<List<Map<String, dynamic>>>(
+                stream: Stream.fromFuture(fetchModules(week)),
+                builder: (context, snapshot) {
+                  // Check connection state
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Loading modules...'),
+                        ],
                       ),
-                      TextField(
-                        controller: linkController,
-                        decoration: const InputDecoration(
-                          labelText: 'Enter Module Link',
-                          border: OutlineInputBorder(),
-                        ),
+                    );
+                  }
+
+                  // Check if data is available
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (isAddingLink)
+                            _buildAddModuleSection(context, dialogSetState,
+                                moduleNameController, linkController, week),
+                          const SizedBox(height: 20),
+                          const Center(child: Text('No modules uploaded yet')),
+                        ],
                       ),
-                      DropdownButton<String>(
-                        value:
-                            selectedCourseId.isEmpty ? null : selectedCourseId,
-                        hint: const Text('Select Course ID'),
-                        items: courses.map((course) {
-                          return DropdownMenuItem<String>(
-                            value: course['id'],
-                            child: Text(course['title']!),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedCourseId = value!;
-                          });
-                        },
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (moduleNameController.text.isNotEmpty &&
-                              linkController.text.isNotEmpty &&
-                              selectedCourseId.isNotEmpty) {
-                            insertLinkToDatabase(
-                              moduleNameController.text,
-                              linkController.text,
-                              selectedCourseId,
+                    );
+                  }
+
+                  // Data is available
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (isAddingLink)
+                          _buildAddModuleSection(context, dialogSetState,
+                              moduleNameController, linkController, week),
+                        const SizedBox(height: 20),
+                        const Text('Uploaded Modules:',
+                            style: TextStyle(fontSize: 18)),
+                        Column(
+                          children: snapshot.data!.map((module) {
+                            return ListTile(
+                              title: Text(module['name']!),
+                              subtitle: Text(module['url']!),
+                              trailing: Text(
+                                  'Course ID: ${module['course_id'] ?? 'N/A'}'),
                             );
-                            moduleNameController.clear();
-                            linkController.clear();
-                            selectedCourseId = '';
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please fill all fields.'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text('Save Module'),
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    const Text('Uploaded Modules:',
-                        style: TextStyle(fontSize: 18)),
-                    ...modules.map((module) {
-                      return ListTile(
-                        title: Text(module['name']!),
-                        subtitle: Text(module['url']!),
-                        trailing: Text('Course ID: ${module['course_id']}'),
-                      );
-                    }).toList(),
-                  ],
-                ),
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Close'),
-                ),
-              ],
             );
           },
         );
       },
+    );
+  }
+
+  Widget _buildAddModuleSection(
+      BuildContext context,
+      StateSetter dialogSetState,
+      TextEditingController moduleNameController,
+      TextEditingController linkController,
+      String week) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: moduleNameController,
+          decoration: const InputDecoration(
+            labelText: 'Enter Module Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        TextField(
+          controller: linkController,
+          decoration: const InputDecoration(
+            labelText: 'Enter Module Link',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        Text(
+          'Course: ${courses.firstWhere((course) => course['id'] == selectedCourseId)['name']}',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (moduleNameController.text.isNotEmpty &&
+                linkController.text.isNotEmpty &&
+                selectedCourseId != -1) {
+              int weekId = weeks.indexWhere((w) => w['name'] == week) + 1;
+
+              insertLinkToDatabase(
+                moduleNameController.text,
+                linkController.text,
+                selectedCourseId,
+                weekId,
+              );
+              moduleNameController.clear();
+              linkController.clear();
+
+              // Refresh modules
+              fetchModules(week);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please fill all fields.'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+          child: const Text('Save Module'),
+        ),
+      ],
     );
   }
 }
